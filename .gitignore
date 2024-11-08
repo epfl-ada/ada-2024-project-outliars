@@ -1,0 +1,65 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+*.virtualenv
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# VSCode settings
+.vscode/
+*.code-workspace
+
+# PyCharm settings
+.idea/
+*.iml
+
+# Python data files
+*.csv
+*.tsv
+*.data
+*.dat
+*.npy
+*.npz
+
+# Log files
+*.log
+logs/
+
+# MacOS-specific files
+.DS_Store
+
+# Environment variables
+.env
+.env.*
+
+# Conda environments
+*.conda
+*.env
+*.condarc
+
+# pipfile.lock and poetry.lock, if not explicitly tracked
+Pipfile.lock
+poetry.lock
+
+# Python packaging files
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# IPython history
+.ipython/
+
