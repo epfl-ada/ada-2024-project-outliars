@@ -1,1 +1,38 @@
-# ada-2024-project-outliars
+# Project Title
+
+---
+
+## Abstract
+
+---
+
+## Research Questions
+
+---
+
+## Proposed Additional Datasets
+
+
+---
+
+## Methods
+
+---
+
+## Proposed Timeline
+
+| Milestone               | Description                                         | Estimated Completion Date |
+|-------------------------|-----------------------------------------------------|----------------------------|
+| Project Milestone 1     |                                                     |                            |
+| Project Milestone 2     |                                                     |                            |
+| Project Milestone P3    |                                                     |                            |
+
+---
+
+## Organization Within the Team
+
+---
+
+## Questions for TAs (Optional)
+
+---
