@@ -1,4 +1,4 @@
-# Project Title
+# The Grandmaster's Path - Difficulty Metrics for Navigating the Wikispeedia Game
 
 ---
 
