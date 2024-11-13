@@ -1,0 +1,42 @@
+first iteration:
+###############################
+1. How to approximate game sessions (guess unique users)
+2. How to cluster people and identify categories of people? ~ grade players 
+3. How do good players play? How to quantify that, give a score for each click, give hints at good times?
+4. At the end, by looking at the flow of the scores for each click, determine how difficult the mission was for that player.
+5. (Optional) where does AI lay in the clustering of people 
+
+
+
+1. look at timestamps and hashes (assumptions !), filter cases where many people connected to same router
+2. k-means 
+3. increase/decrease of shortest path, avg number between clicks, .., feature extraction -> which ones are good factors
+###################################
+
+new iteration: 
+
+	QUESTIONS:
+1. How to approximate game sessions (guess players)?
+2. Estimate of difficulty of game before playing (based on winrate) -> metric D 
+3. What makes a good game? Clustering (duration, path_length, average move error (see below), number of backward), defining how to score individual finished game = metric M 
+4. What makes a good player? By analysing their games and assigning scores based on M
+5. Look at paths of good players, how does their difficulty score (metric D) decrease while playing, test other hypothesis too
+
+DURATION AND NUM OF BACKWARD DEPEND ON PATH_LENGTH
+
+average move error
+in some state the shortest path to target is N, after a click the new shortest path is either N-1 (we made the optimal move) or M
+the difference between N-1 and M is the error of the move
+we take the average over all moves
+
+WHAT DO WE DELETE:
+-Filtrate data before 2011 (?)
+-missions (source - target) that were played less than X times
+-identified players that played less than Y games
+
+ASSUMPTIONS:
+-for 1.
+-for 2., the taken finished games were played by players with different skill levels (winrate is therefore correct metric)
+
+
+
