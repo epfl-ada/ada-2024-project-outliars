@@ -1,0 +1,40 @@
+prva tri klika:
+-running zajeb ----------------------------> koristimo naš score (ili shortest path)
+-koliko si se približio (u ta 3 koraka) ------------- > koristimo naš score (ili shortest path)
+-broj promjena kategorije  (?)
+-broj backtrackova
+-max outdegree ili zadnji outdegree ili samo sve 
+
+naš score ("a priori" = preprocessing) nekog para:
+-shortest path
+-koliko je različitih shortest pathova
+-average degree nodeova u tim pathovima
+-koliko različitih one-off pathova (duljine shortest patha + 1), degrees nodeova u njima
+-> treniramo model nad podacima o igrama gdje je izlazna varijabla neuspjeh (nad noobovima)
+-> kada evaluiramo, nad noobovima očekujemo bolji accuracy nego nad ekspertima 
+-> pazi na balansiranost dataseta
+
+koliko su dobri igrači:
+-zbroj (kolko je dobra igra * težina igre po našem scoreu * je li pobjedio) / kolko igri je igro
+ILI
+-prosječna (naš score) težina igre i success rate (s kolko teškim igrama se suočio i je li pobjedio)
+
+-potencijalno kolko je dobra igra računati unsupervised i onda to koristiti za računati koliko je dobar igrač
+
+
+-> još jedna konačna regresija sa sve tri
+
+SPLIT DATASETA:
+
+
+PITANJA:
+1. Koliko dobro možemo predvidjeti ishod igre gledajući samo igru, igrača i prvih N klikova? Što najviše utječe?
+2. Koliko klikova je potrebno za odrediti ishod igre?
+3. Koje su strategije dobrih igrača?
+4. Koja su svojstva najkraćih pathova (njihov broj, kategorije) i kako oni utječu na uspješnost igre?
+
+
+
+
+
+
