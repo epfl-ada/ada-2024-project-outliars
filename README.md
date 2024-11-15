@@ -1,4 +1,4 @@
-# Mastering Wikispeedia: Decoding Difficulty and Winning Strategies
+# Grandmastering Wikispeedia: Decoding Difficulty and Streamlining Strategies
 
 ---
 
@@ -78,10 +78,5 @@ This would enable the implementation of an Elo-like rating system, real-time fee
 | Week 4    | Draw initial conclusions, analyze results, start building a page, optionally test chatbot behavior | Preliminary analysis, basic webpage framework       |
 | Week 5    | Final touches                                                        | Final data story, polished results       |
 
-
-
----
-
-## Questions for TAs (Optional)
 
 ---
