@@ -1,4 +1,4 @@
-# Grandmastering Wikispeedia: Decoding Difficulty and Streamlining Strategies
+# Grandmaster's Path: Decoding Difficulty and Winning Strategies in Wikispeedia
 
 ---
 
