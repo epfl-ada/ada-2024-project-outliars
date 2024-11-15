@@ -38,10 +38,8 @@ a particular game based on source-destination difficultly, player rating, and th
 
 1. Since the provided dataset only contains shortest path information between articles, and we believe there is more relevant data, 
    we carry out a more advanced analysis
-   - adjacency list is constructed and each article is assigned a unique ID to avoid hash table lookups
-   - obtaining all distinct shortest paths between all unique pairs, as well as paths that are $1$ and $2$ steps longer than the shortest path to judge sensitivity and connectedness
-   - since this is very compute intensive, O(N^4), where N is the number of articles, the per pair BFS search is executed in C++, possibly in parallel
-   - the data is dumped into a file and available in Python
+   - obtaining all distinct shortest paths between all unique pairs, as well as paths that are $1$ and $2$ steps longer than the shortest paths to judge sensitivity and connectedness
+   - since this is very compute intensive, the per pair BFS search is executed in C++
 
 2. Perform semantic analysis of Wikispeedia graph using article embedding
    - attempt to capture features which are not connected to the graph structure
@@ -55,11 +53,8 @@ a particular game based on source-destination difficultly, player rating, and th
    - distance between source and destination articles in the embedding space
 
 4. Attempt to estimate how well a player did in a particular game
-   - attempt using unsupervised learning (e.g. clustering) on games in a higher dimensional space
-   - If this fails, a simple idea is to look at the total variation within the game, i.e. for every step there is an 
-     absolute change in estimated difficulty and if this is a monotonously decreasing function it will equal the 
-     estimated game difficulty from the beginning of the game. Otherwise, it will be higher, suggesting the player 
-     did not play optimally.
+   - first using unsupervised learning (e.g. clustering) on games
+   - if this fails, a simple idea is to look at how much the estimated difficulty fluctuates during the game
 
 5. Gather quantitative information from the first $k$ clicks
    - how much closer is the player to the final destination
