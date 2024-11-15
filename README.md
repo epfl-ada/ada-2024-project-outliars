@@ -68,14 +68,18 @@ a particular game based on source-destination difficultly, player rating, and th
 
 7. (Optional) Use one of the popular chatbots to see quantify how it compares to human players - give it a score
 
-## Proposed timeline and organisation
 
-TODO (moze i samo Week 1: nesto, Week 2: nesto drugo)
-| Milestone               | Description                                         | Estimated Completion Date  |
-|-------------------------|-----------------------------------------------------|----------------------------|
-| X                       |                                                     |                            |
-| Y                       |                                                     |                            |
-| Z                       |                                                     |                            |
+## Proposed Timeline and Organization
+
+| Week      | Task                                                                 | Deliverables                                         |
+|-----------|----------------------------------------------------------------------|-----------------------------------------------------|
+| Week 1    | Extract data, calculate inherent difficulties using links and graph, set up logistic regression pipeline, determine a player rating system | Preprocessed data, logistic regression setup, initial player metrics |
+| Week 2    | Determine player skill level, assess game performance, create embeddings of articles | Player skill metrics, game evaluation framework, article embeddings |
+| Week 3    | Use embeddings for semantic analysis to predict game success         | Prediction model leveraging semantic insights       |
+| Week 4    | Draw initial conclusions, analyze results, start building a page, optionally test chatbot behavior | Preliminary analysis, basic webpage framework       |
+| Week 5    | Final touches                                                        | Final data story, polished results       |
+
+
 
 ---
 
