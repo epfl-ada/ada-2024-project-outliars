@@ -4,15 +4,14 @@
 
 ## Abstract
 
-Since we love the concept behind Wikispeedia, we endeavour to make it even more enticing by introducing a scoring system. 
-Our goal is to further gamify Wikispeedia by formulating a user-independent metric which characterizes the difficulty 
-of a given game, and using it to track game progress.
-We seek to formalize what makes a game well executed and use this knowledge to update the player's rating upon 
-termination, in a manner similar to chess, except the opponent is the path.
-Finally, we explore what makes a player great and attempt to set new players on this path through feedback, 
-encouraging when they make good moves and giving hints when they get stuck. 
-This decision is the centerpiece of our project and is based on predicting how likely a player is to finish 
-a particular game based on source-destination difficultly, player rating, and the first $k$ clicks.
+Inspired by the enduring appeal of chess, a centuries-old game that continues to attract new players, we aim to achieve a similar legacy for a modern favorite - Wikispeedia. While we cannot produce a Netflix limited series to popularize the game, we aim to make it more accessible by uncovering what makes the best players excel and why do less skilled players get stuck, consequently paving the way for new players. 
+
+Our goals are the following: 
+- Understand the inherent difficulty of missions using a player-independent metric.
+- Uncover the strategies of successful players to provide actionable feedback to new players.
+- Develop an interpretable model that predicts outcomes based on mission difficulty, player rating, and early-game behavior.
+
+This would enable the implementation of an Elo-like rating system, real-time feedback during gameplay, and the formalization of strategies. As a result, the game becomes more compelling and focused on thoughtful decision-making.
 
 ## Research Questions
 
