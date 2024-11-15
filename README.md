@@ -4,54 +4,74 @@
 
 ## Abstract
 
-Wikispeedia offers a unique blend of learning and fun, and we see an opportunity to enhance the experience further by introducing a scoring system.
-Our primary goal is to discover and understand the strategies that lead to success in Wikispeedia, while also formulating a player-independent metric that characterizes the difficulty of a given mission.
-We seek to formalize our intuitive sense of what makes a mission well-executed: the path taken is close to the shortest possible, with quick and accurate navigation. In doing so, we hope to uncover what makes the best players excel and attempt to set new players on this path by providing feedback — encouraging good moves and offering hints when they get stuck.
-This decision is the centerpiece of our project and relies on building an interpretable model that predicts the outcome of games based on the inherent difficulty of the source-destination pair, the player’s rating, and their first $k$ clicks.
+Since we love the concept behind Wikispeedia, we endeavour to make it even more enticing by introducing a scoring system. 
+Our goal is to further gamify Wikispeedia by formulating a user-independent metric which characterizes the difficulty 
+of a given game, and using it to track game progress.
+We seek to formalize what makes a game well executed and use this knowledge to update the player's rating upon 
+termination, in a manner similar to chess, except the opponent is the path.
+Finally, we explore what makes a player great and attempt to set new players on this path through feedback, 
+encouraging when they make good moves and giving hints when they get stuck. 
+This decision is the centerpiece of our project and is based on predicting how likely a player is to finish 
+a particular game based on source-destination difficultly, player rating, and the first $k$ clicks.
 
 ## Research Questions
 
 1. What makes a game inherently difficult?
-   - Which properties of the Wikipedia graph the players navigate are important for a good player-independent metric of difficulty (from now on referred to as estimated difficulty)?
+   - Which properties of the Wikipedia graph the players navigate are important for a good, player-independent metric of difficulty (from now on referred to as estimated difficulty)?
    - Can we use data from the games of players identified as newbies (those with few completed games) to extract information that captures *inherent* difficulty for our estimate?
 2. If we can sufficiently reliably identify a player, what metric should be used for rating their performance?
-   - Should the metric be as simple as combining the player's win rate and the average estimated difficulty of the missions the player tried?
-   - Can this score be easily updated based on the current player score and the mission he just completed, similarly to the Elo rating system applied to chess?
-3. We consider mission duration, deviation from the shortest path length, and high accuracy (low backtracking rate) as important indicators of how well the player performed - can this notion be quantified?
+   - Should the metric be as simple as combining the player's win rate and the average estimated difficulty of the games the player tried?
+   - Can this score be easily updated based on the current player score and the game he just completed, similarly to the Elo rating system applied to chess?
+3. We consider game duration, deviation from the shortest path length, and high accuracy (low backtracking rate) as important indicators of how well the player performed - can this notion be quantified?
    - If this importance can be learned in some way, how can we use it for player rating updates?
 4. Given the estimated difficulty, player rating, and information available from the first $k$ clicks, can we reliably predict whether a player will successfully finish the game?
    - If so, how many early clicks are necessary, how confident are we, and what information is the most valuable?
    - If not, why is this not possible and what does it reveal about the game's dynamics?
-5. TODO nesto sa strategijama i onim grafom koji plota tezinu kroz vrijeme
+5. How does the score of a particular game change as the game progresses?
+   - Is this a monotonically decreasing function for good players?
+   - Are there any identifiable "strategies" that good players use?
 6. (Optional) How does a chatbot compare with a human player - what score would it have in this setting?
    - Are there quantitative differences between the way a chatbot plays on different "temperature" settings?
    - Are there qualitative differences between how humans and chatbots play the game?
 
 ## Methods
 
-1. TODO Extracting data from the Wikipedia graph
+1. Since the provided dataset only contains shortest path information between articles, and we believe there is more relevant data, 
+   we carry out a more advanced analysis
+   - adjacency list is constructed and each article is assigned a unique ID to avoid hash table lookups
+   - obtaining all distinct shortest paths between all unique pairs, as well as paths that are $1$ and $2$ steps longer than the shortest path to judge sensitivity and connectedness
+   - since this is very compute intensive, O(N^4), where N is the number of articles, the per pair BFS search is executed in C++, possibly in parallel
+   - the data is dumped into a file and available in Python
 
-TODO, pojasnimo svrhu ovoga, opcenito -> koja metoda je za sta?
+2. Perform semantic analysis of Wikispeedia graph using article embedding
+   - attempt to capture features which are not connected to the graph structure
+   - use one of the existing tools for this task (e.g. RoBERTa)
 
-2. To address inherent difficulty, we would use logistic regression to fit success against the following parameters:
+3. To address inherent difficulty, we would use logistic regression to fit success against the parameters which we obtained in the previous two steps:
    - shortest path between the source and destination
    - the number of different shortest paths
    - the degree of nodes in those paths (explore whether taking an average or maximum has a meaningful impact)
-   - number of paths $1$ step longer than the shortest path (sensitivity analysis)
+   - number of paths $1$ step, or possibly $2$ steps, longer than the shortest path (sensitivity analysis)
+   - distance between source and destination articles in the embedding space
 
-3. Attempt to estimate how well a player did in a particular game with an unsupervised algorithm
-   - clustering games in a higher dimensional space
-   - properties such as TODO
+4. Attempt to estimate how well a player did in a particular game
+   - attempt using unsupervised learning (e.g. clustering) on games in a higher dimensional space
+   - If this fails, a simple idea is to look at the total variation within the game, i.e. for every step there is an 
+     absolute change in estimated difficulty and if this is a monotonously decreasing function it will equal the 
+     estimated game difficulty from the beginning of the game. Otherwise, it will be higher, suggesting the player 
+     did not play optimally.
 
-4. Gather quantitative information from the first $k$ clicks
+5. Gather quantitative information from the first $k$ clicks
    - how much closer is the player to the final destination
    - did the player choose intermediate articles such that reaching the destination from them is more difficult than from the starting point
    - the number of times the player backtracks
    - quality of the nodes along the path thus far (measured by e.g. outdegree)
 
-5. Build two interpretable models for outcome prediction and perform feature importance analysis
+6. Build two interpretable models for outcome prediction and perform feature importance analysis, perhaps revealing "strategies"
    - a logistic regression model
    - a decision tree
+
+7. (Optional) Use one of the popular chatbots to see quantify how it compares to human players - give it a score
 
 ## Proposed timeline and organisation
 
