@@ -58,6 +58,9 @@ poetry.lock
 .eggs/
 dist/
 build/
+cmake-build-debug/
+cmake-build-release/
+data/
 *.egg
 
 # IPython history
