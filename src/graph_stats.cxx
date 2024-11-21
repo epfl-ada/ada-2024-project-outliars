@@ -20,17 +20,19 @@
 
 // Function to trim whitespace from a string (helper function)
 std::string trim(const std::string& str) {
-    const char* whitespace = " \t\n\r";
-    size_t start = str.find_first_not_of(whitespace);
+    const auto whitespace = " \t\n\r";
+    const size_t start = str.find_first_not_of(whitespace);
+
     if (start == std::string::npos)
         return ""; // Empty string
-    size_t end = str.find_last_not_of(whitespace);
+
+    const size_t end = str.find_last_not_of(whitespace);
     return str.substr(start, end - start + 1);
 }
 
 
 std::vector<std::vector<uint16_t>> build_reverse_adj_list(const std::vector<std::vector<uint16_t>>& adj_list) {
-    size_t num_nodes = adj_list.size();
+    const size_t num_nodes = adj_list.size();
     std::vector<std::vector<uint16_t>> reverse_adj_list(num_nodes);
 
     for (uint16_t u = 0; u < num_nodes; ++u) {
@@ -214,6 +216,15 @@ private:
         }
     }
 
+    void sort_adjacency_list_according_to_degrees() {
+        for (std::vector<uint16_t>& neighbors : this->adjacency_list) {
+            std::ranges::sort(neighbors,
+                              [this](const uint16_t a, const uint16_t b) {
+                                  return this->degrees[a] > this->degrees[b];
+                              });
+        }
+    }
+
 public:
     std::string get_node_name(const uint16_t node_id) const {
         return this->id_to_node[node_id];
@@ -322,6 +333,7 @@ public:
         infile.close();
 
         graph.compute_node_degrees();
+        // graph.sort_adjacency_list_according_to_degrees();
         return graph;
     }
 
@@ -454,7 +466,7 @@ public:
             std::vector<uint16_t> distances;
             std::vector<std::vector<uint16_t>> predecessors;
 
-            #pragma omp for schedule(dynamic)
+            #pragma omp for schedule(guided, 4)
             for (uint16_t source = 0; source < num_nodes; ++source) {
                 this->bfs_all_shortest_paths(source, distances, predecessors);
 
@@ -540,7 +552,7 @@ int main() {
     try {
         omp_set_num_threads(16);
 
-        Graph graph = Graph::load_graph_from_file("../data/paths-and-graph/adj_list.txt");
+        const Graph graph = Graph::load_graph_from_file("../data/paths-and-graph/adj_list.txt");
 
         const std::vector<std::vector<PairData>> pair_path_data = graph.compute_all_shortest_paths_statistics(true, true);
 
