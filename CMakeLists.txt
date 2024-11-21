@@ -2,6 +2,39 @@ cmake_minimum_required(VERSION 3.29)
 project(ada_2024_project_outliars)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -march=native -mtune=native -fopenmp")
+
+# Detect compiler
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    message(STATUS "Using GCC or Clang compiler")
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    message(STATUS "Using MSVC compiler")
+else()
+    message(WARNING "Unsupported compiler detected")
+endif()
+
+# Detect OS
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    message(STATUS "Configuring for Windows")
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    message(STATUS "Configuring for Linux")
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    message(STATUS "Configuring for macOS")
+else()
+    message(WARNING "Unknown operating system")
+endif()
+
+# Set compiler flags based on OS and compiler
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    # General flags for GCC/Clang
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -fopenmp")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -march=native -mtune=native -flto -fuse-linker-plugin -fno-plt")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -Og -fstack-protector-strong -fsanitize=undefined,address")
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    # Flags for MSVC
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /EHsc")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi /Od")
+endif()
+
 
 add_executable(graph_stats src/graph_stats.cxx)
