@@ -27,13 +27,13 @@ endif()
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     # General flags for GCC/Clang
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -fopenmp")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -march=native -mtune=native -flto -fuse-linker-plugin -fno-plt")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -Og -fstack-protector-strong -fsanitize=undefined,address")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -fstack-protector-strong -fsanitize=undefined,address")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -march=native -mtune=native -flto -fuse-linker-plugin -fno-plt -finline-functions -fomit-frame-pointer -fno-math-errno -fno-rtti -frename-registers")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     # Flags for MSVC
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /EHsc")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi /Od")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2")
 endif()
 
 

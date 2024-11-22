@@ -1,5 +1,12 @@
 #include <cstdint>
+#include <cstdio>
+#include <string>
+
 #include <vector>
+#include <queue>
+#include <stack>
+
+#include <unordered_set>
 #include <unordered_map>
 
 #include <iostream>
@@ -7,13 +14,12 @@
 #include <fstream>
 
 #include <algorithm>
-#include <queue>
-#include <unordered_set>
+#include <chrono>
 
 #include <omp.h>
 
 /// Maximum number of paths to consider for one longer paths
-#define MAX_CONSIDERED_NUMBER_OF_OL_PATHS 3
+#define MAX_CONSIDERED_NUMBER_OF_OL_PATHS 5
 /// Maximum number of paths to consider for two longer paths
 #define MAX_CONSIDERED_NUMBER_OF_TL_PATHS 3
 
@@ -52,7 +58,7 @@ void reconstruct_paths(const uint16_t source, const uint16_t target,
     if (target == source) {
         current_path.push_back(source);
         std::vector<uint16_t> path = current_path;
-        std::reverse(path.begin(), path.end());
+        std::ranges::reverse(path);
         paths.push_back(path);
         current_path.pop_back();
         return;
@@ -89,7 +95,7 @@ void reconstruct_paths_of_length(const uint16_t source, const uint16_t target,
         current_path.push_back(source);
         if (current_path.size() == desired_length + 1) {
             std::vector<uint16_t> path = current_path;
-            std::reverse(path.begin(), path.end());
+            std::ranges::reverse(path);
             paths.push_back(path);
         }
         current_path.pop_back();
@@ -99,7 +105,7 @@ void reconstruct_paths_of_length(const uint16_t source, const uint16_t target,
     visited.insert(target);
     current_path.push_back(target);
 
-    uint16_t current_distance = distances[target];
+    const uint16_t current_distance = distances[target];
 
     if (current_path.size() < desired_length + 1) {
         // Consider predecessors (shortest paths)
@@ -459,89 +465,92 @@ public:
         const std::vector<std::vector<uint16_t>> reverse_adj_list = build_reverse_adj_list(this->adjacency_list);
 
         uint32_t completed_nodes = 0;
+        const auto& graph = const_cast<Graph&>(*this);
 
-        #pragma omp parallel default(none) shared(pair_path_data, completed_nodes, reverse_adj_list) \
-                             firstprivate(num_nodes, compute_one_longer_paths, compute_two_longer_paths)
-        {
+        #pragma omp parallel for default(none) shared(pair_path_data, completed_nodes, reverse_adj_list, graph) \
+                                               firstprivate(num_nodes, compute_one_longer_paths, compute_two_longer_paths) \
+                                               schedule(guided)
+        for (uint16_t source = 0; source < num_nodes; ++source) {
             std::vector<uint16_t> distances;
             std::vector<std::vector<uint16_t>> predecessors;
 
-            #pragma omp for schedule(guided, 4)
-            for (uint16_t source = 0; source < num_nodes; ++source) {
-                this->bfs_all_shortest_paths(source, distances, predecessors);
+            graph.bfs_all_shortest_paths(source, distances, predecessors);
 
-                std::vector<std::vector<uint16_t>> paths;
-                std::vector<uint16_t> current_path;
-                std::unordered_set<uint16_t> visited;
+            std::vector<std::vector<uint16_t>> paths;
+            std::vector<uint16_t> current_path;
+            std::unordered_set<uint16_t> visited;
 
-                for (uint16_t target = 0; target < num_nodes; ++target) {
-                    if (distances[target] != UINT16_MAX) {
-                        paths.clear();
-                        current_path.clear();
+            for (uint16_t target = 0; target < num_nodes; ++target) {
+                if (distances[target] != UINT16_MAX) {
+                    paths.clear();
+                    current_path.clear();
 
-                        reconstruct_paths(source, target, predecessors, paths, current_path);
+                    reconstruct_paths(source, target, predecessors, paths, current_path);
 
-                        if (!paths.empty()) {
-                            pair_path_data[source][target].shortest_path_length = paths[0].size() - 1;
-                            pair_path_data[source][target].shortest_path_count = paths.size();
+                    if (!paths.empty()) {
+                        pair_path_data[source][target].shortest_path_length = paths[0].size() - 1;
+                        pair_path_data[source][target].shortest_path_count = paths.size();
 
-                            auto sp_statistics = this->compute_shortest_paths_statistics(paths);
-                            pair_path_data[source][target].max_sp_node_degree = std::get<0>(sp_statistics);
-                            pair_path_data[source][target].max_sp_average_node_degree = std::get<1>(sp_statistics);
-                            pair_path_data[source][target].average_sp_average_node_degree = std::get<2>(sp_statistics);
+                        auto sp_statistics = graph.compute_shortest_paths_statistics(paths);
+                        pair_path_data[source][target].max_sp_node_degree = std::get<0>(sp_statistics);
+                        pair_path_data[source][target].max_sp_average_node_degree = std::get<1>(sp_statistics);
+                        pair_path_data[source][target].average_sp_average_node_degree = std::get<2>(sp_statistics);
 
-                            if (compute_one_longer_paths) {
-                                paths.clear();
-                                current_path.clear();
-                                visited.clear();
+                        if (compute_one_longer_paths) {
+                            paths.clear();
+                            current_path.clear();
+                            visited.clear();
 
-                                reconstruct_paths_of_length(source, target, predecessors, distances, reverse_adj_list,
-                                                            paths, current_path, visited,
-                                                            pair_path_data[source][target].shortest_path_length + 1,
-                                                            MAX_CONSIDERED_NUMBER_OF_OL_PATHS);
+                            reconstruct_paths_of_length(
+                                source, target, predecessors, distances, reverse_adj_list,
+                                paths, current_path, visited,
+                                pair_path_data[source][target].shortest_path_length + 1,
+                                MAX_CONSIDERED_NUMBER_OF_OL_PATHS
+                            );
 
-                                if (!paths.empty()) {
-                                    pair_path_data[source][target].one_longer_path_count = paths.size();
+                            if (!paths.empty()) {
+                                pair_path_data[source][target].one_longer_path_count = paths.size();
 
-                                    auto ol_statistics = this->compute_shortest_paths_statistics(paths);
-                                    pair_path_data[source][target].max_ol_node_degree = std::get<0>(ol_statistics);
-                                    pair_path_data[source][target].max_ol_average_node_degree = std::get<1>(ol_statistics);
-                                    pair_path_data[source][target].average_ol_average_node_degree = std::get<2>(ol_statistics);
-                                }
+                                auto ol_statistics = graph.compute_shortest_paths_statistics(paths);
+                                pair_path_data[source][target].max_ol_node_degree = std::get<0>(ol_statistics);
+                                pair_path_data[source][target].max_ol_average_node_degree = std::get<1>(ol_statistics);
+                                pair_path_data[source][target].average_ol_average_node_degree = std::get<2>(ol_statistics);
                             }
+                        }
 
-                            if (compute_two_longer_paths) {
-                                paths.clear();
-                                current_path.clear();
-                                visited.clear();
+                        if (compute_two_longer_paths) {
+                            paths.clear();
+                            current_path.clear();
+                            visited.clear();
 
-                                reconstruct_paths_of_length(source, target, predecessors, distances, reverse_adj_list,
-                                                            paths, current_path, visited,
-                                                            pair_path_data[source][target].shortest_path_length + 2,
-                                                            MAX_CONSIDERED_NUMBER_OF_TL_PATHS);
+                            reconstruct_paths_of_length(source, target, predecessors, distances, reverse_adj_list,
+                                                        paths, current_path, visited,
+                                                        pair_path_data[source][target].shortest_path_length + 2,
+                                                        MAX_CONSIDERED_NUMBER_OF_TL_PATHS);
 
-                                if (!paths.empty()) {
-                                    pair_path_data[source][target].two_longer_path_count = paths.size();
+                            if (!paths.empty()) {
+                                pair_path_data[source][target].two_longer_path_count = paths.size();
 
-                                    auto ol_statistics = this->compute_shortest_paths_statistics(paths);
-                                    pair_path_data[source][target].max_tl_node_degree = std::get<0>(ol_statistics);
-                                    pair_path_data[source][target].max_tl_average_node_degree = std::get<1>(ol_statistics);
-                                }
+                                auto ol_statistics = graph.compute_shortest_paths_statistics(paths);
+                                pair_path_data[source][target].max_tl_node_degree = std::get<0>(ol_statistics);
+                                pair_path_data[source][target].max_tl_average_node_degree = std::get<1>(ol_statistics);
                             }
                         }
                     }
                 }
-                #pragma omp critical
-                {
-                    completed_nodes++;
-                    if (completed_nodes % omp_get_num_threads() == 0 || completed_nodes + omp_get_num_threads() >= num_nodes) {
-                        printf("Completed %d nodes out of %d\n", completed_nodes, num_nodes);
-                    }
-                }
+            }
+
+            #pragma omp atomic
+            completed_nodes++;
+
+            if (completed_nodes % omp_get_num_threads() == 0 || completed_nodes + omp_get_num_threads() >= num_nodes) {
+                printf("Completed %4d nodes out of %d (%4.1f%%)\n", completed_nodes, num_nodes,
+                       100.0 * completed_nodes / num_nodes);
             }
         }
 
-        std::cout << "Completed " << completed_nodes << " nodes\n";
+
+        std::cout << "Completed all " << completed_nodes << " nodes\n";
 
         return pair_path_data;
     }
@@ -554,7 +563,14 @@ int main() {
 
         const Graph graph = Graph::load_graph_from_file("../data/paths-and-graph/adj_list.txt");
 
+        // Add timing here
+        std::chrono::high_resolution_clock clock;
+        const auto start = clock.now();
         const std::vector<std::vector<PairData>> pair_path_data = graph.compute_all_shortest_paths_statistics(true, true);
+
+        const auto end = clock.now();
+        const std::chrono::duration<double> elapsed_seconds = end - start;
+        std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
 
         dump_to_file("../data/paths-and-graph/pair_stats.txt", pair_path_data);
 
