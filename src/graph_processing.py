@@ -154,6 +154,47 @@ def read_distance_matrix(file_path: str, articles_df: pd.DataFrame, skip_lines: 
     return distance_df
 
 
+def generate_index_mapping(adj_list: dict) -> dict:
+    """
+    Generates an index mapping for the nodes in the graph.
+
+    Args:
+        adj_list (dict): The adjacency list of the graph where keys are node names and values are lists of adjacent nodes.
+
+    Returns:
+        dict: A mapping from node names to indices.
+    """
+    # Collect all unique nodes from keys and values
+    unique_nodes = set(adj_list.keys())
+    for neighbors in adj_list.values():
+        unique_nodes.update(neighbors)
+    unique_nodes = sorted(unique_nodes)  # Optional: sort nodes for consistency
+    
+    # Assign a unique ID to each node
+    node_to_id = {node: idx for idx, node in enumerate(unique_nodes)}
+    
+    return node_to_id
+
+
+def generate_inverse_index_mapping(adj_list: dict) -> dict:
+    """
+    Generates an inverse index mapping for the nodes in the graph.
+
+    Args:
+        index_mapping (dict): A mapping from node names to indices.
+
+    Returns:
+        dict: A mapping from indices to node names.
+    """
+    # Generate the index mapping
+    node_to_id = generate_index_mapping(adj_list)
+    
+    # Invert the mapping
+    id_to_node = {idx: node for node, idx in node_to_id.items()}
+    
+    return id_to_node
+
+
 def export_graph_to_indexed_format(adj_list: dict, output_file: str):
     """
     Exports the adjacency list to a text file with an index mapping and adjacency lists using indices.
@@ -163,14 +204,7 @@ def export_graph_to_indexed_format(adj_list: dict, output_file: str):
         output_file (str): The path to the output text file.
     """
     # Step 1: Create an index mapping
-    # Collect all unique nodes from keys and values
-    unique_nodes = set(adj_list.keys())
-    for neighbors in adj_list.values():
-        unique_nodes.update(neighbors)
-    unique_nodes = sorted(unique_nodes)  # Optional: sort nodes for consistency
-    
-    # Assign a unique ID to each node
-    node_to_id = {node: idx for idx, node in enumerate(unique_nodes)}
+    node_to_id = generate_index_mapping(adj_list)
     
     # Step 2: Write the index mapping and adjacency lists to the output file
     with open(output_file, 'w') as f:
@@ -189,4 +223,52 @@ def export_graph_to_indexed_format(adj_list: dict, output_file: str):
             # Write the node ID followed by its neighbor IDs
             neighbor_ids_str = ' '.join(map(str, neighbor_ids))
             f.write(f'{node_id}: {neighbor_ids_str}\n')
-            
+
+
+def load_pair_data_with_multiindex(filename, node_mapping=None):
+    """
+    Loads pair data into a pandas DataFrame with MultiIndex on rows.
+    
+    Args:
+        filename (str): Path to the data file.
+        node_mapping (dict, optional): Mapping from node indices to node names.
+    
+    Returns:
+        pd.DataFrame: DataFrame with MultiIndex rows (source, target) and columns as features.
+    """
+    # Define column names
+    column_names = [
+        'source', 
+        'target',
+        'shortest_path_length',
+        'shortest_path_count',
+        'max_sp_node_degree',
+        'max_sp_avg_node_degree',
+        'avg_sp_avg_node_degree',
+        'one_longer_path_count',
+        'max_ol_node_degree',
+        'max_ol_avg_node_degree',
+        'avg_ol_avg_node_degree',
+        'two_longer_path_count',
+        'max_tl_node_degree',
+        'max_tl_avg_node_degree'
+    ]
+    
+    # Read the data
+    df = pd.read_csv(
+        filename,
+        sep=' ',
+        header=None,
+        names=column_names,
+        dtype='UInt16'
+    )
+    
+    # Map node indices to names if provided
+    if node_mapping:
+        df['source'] = df['source'].map(node_mapping)
+        df['target'] = df['target'].map(node_mapping)
+    
+    # Set MultiIndex on rows
+    df.set_index(['source', 'target'], inplace=True)
+    
+    return df

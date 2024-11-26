@@ -41,8 +41,8 @@ std::vector<std::vector<uint16_t>> build_reverse_adj_list(const std::vector<std:
     const size_t num_nodes = adj_list.size();
     std::vector<std::vector<uint16_t>> reverse_adj_list(num_nodes);
 
-    for (uint16_t u = 0; u < num_nodes; ++u) {
-        for (uint16_t v : adj_list[u]) {
+    for (uint16_t u = 0; u < static_cast<uint16_t>(num_nodes); ++u) {
+        for (const uint16_t v : adj_list[u]) {
             reverse_adj_list[v].push_back(u);
         }
     }
@@ -469,7 +469,7 @@ public:
 
         #pragma omp parallel for default(none) shared(pair_path_data, completed_nodes, reverse_adj_list, graph) \
                                                firstprivate(num_nodes, compute_one_longer_paths, compute_two_longer_paths) \
-                                               schedule(guided)
+                                               schedule(runtime)
         for (uint16_t source = 0; source < num_nodes; ++source) {
             std::vector<uint16_t> distances;
             std::vector<std::vector<uint16_t>> predecessors;
@@ -564,11 +564,10 @@ int main() {
         const Graph graph = Graph::load_graph_from_file("../data/paths-and-graph/adj_list.txt");
 
         // Add timing here
-        std::chrono::high_resolution_clock clock;
-        const auto start = clock.now();
+        const auto start = std::chrono::high_resolution_clock::now();
         const std::vector<std::vector<PairData>> pair_path_data = graph.compute_all_shortest_paths_statistics(true, true);
 
-        const auto end = clock.now();
+        const auto end = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> elapsed_seconds = end - start;
         std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
 
