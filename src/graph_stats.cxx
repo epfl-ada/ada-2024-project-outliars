@@ -171,6 +171,29 @@ struct PairData {
     }
 };
 
+struct NodeData {
+    /// Node name
+    std::string name;
+    /// Node degree
+    uint16_t degree;
+    /// Node closeness centrality
+    double closeness_centrality;
+    /// Node betweenness centrality
+    double betweenness_centrality;
+    /// Node PageRank
+    double pagerank;
+
+    [[nodiscard]] std::string to_string() const {
+        std::ostringstream oss;
+        oss << "Node name:               " << name << '\n'
+            << "Node degree:             " << degree << '\n'
+            << "Closeness centrality:    " << closeness_centrality << '\n'
+            << "Betweenness centrality:  " << betweenness_centrality << '\n'
+            << "PageRank:                " << pagerank << '\n';
+        return oss.str();
+    }
+};
+
 void dump_to_file(const std::string& filename, const std::vector<std::vector<PairData>>& pair_data) {
     std::ofstream outfile(filename);
     if (!outfile.is_open()) {
@@ -199,6 +222,24 @@ void dump_to_file(const std::string& filename, const std::vector<std::vector<Pai
         }
     }
 
+    outfile.close();
+}
+
+void dump_node_data_to_file(const std::string& filename, const std::vector<NodeData>& node_data) {
+    std::ofstream outfile(filename);
+    if (!outfile.is_open()) {
+        throw std::runtime_error("Error opening file: " + filename);
+    }
+
+    // Use scientific notation for floating point numbers and keep 4 decimal places
+    for (uint16_t i = 0; i < static_cast<uint16_t>(node_data.size()); ++i) {
+        outfile << node_data[i].name << '\t'
+                << node_data[i].degree << '\t'
+                << std::scientific << std::setprecision(4)
+                << node_data[i].closeness_centrality << '\t'
+                << node_data[i].betweenness_centrality << '\t'
+                << node_data[i].pagerank << '\n';
+    }
     outfile.close();
 }
 
@@ -238,6 +279,10 @@ public:
 
     uint16_t get_node_id(const std::string& node_name) const {
         return this->node_to_id.at(node_name);
+    }
+
+    uint16_t get_node_degree(const uint16_t node_id) const {
+        return this->degrees[node_id];
     }
 
     size_t get_num_nodes() const {
@@ -469,7 +514,7 @@ public:
 
         #pragma omp parallel for default(none) shared(pair_path_data, completed_nodes, reverse_adj_list, graph) \
                                                firstprivate(num_nodes, compute_one_longer_paths, compute_two_longer_paths) \
-                                               schedule(runtime)
+                                               schedule(dynamic)
         for (uint16_t source = 0; source < num_nodes; ++source) {
             std::vector<uint16_t> distances;
             std::vector<std::vector<uint16_t>> predecessors;
@@ -554,6 +599,153 @@ public:
 
         return pair_path_data;
     }
+
+    std::vector<double> compute_closeness_centrality() const {
+        const size_t num_nodes = this->adjacency_list.size();
+        std::vector<double> closeness_centrality(num_nodes, 0.0);
+
+        #pragma omp parallel for default(shared) schedule(dynamic)
+        for (uint16_t source = 0; source < static_cast<uint16_t>(num_nodes); ++source) {
+            std::vector<uint16_t> distances(num_nodes, UINT16_MAX);
+            std::queue<uint16_t> q;
+
+            distances[source] = 0;
+            q.push(source);
+
+            uint32_t sum_distances = 0;
+            uint32_t reachable_nodes = 0;
+
+            while (!q.empty()) {
+                uint16_t u = q.front();
+                q.pop();
+
+                for (uint16_t v : this->adjacency_list[u]) {
+                    if (distances[v] == UINT16_MAX) {
+                        distances[v] = distances[u] + 1;
+                        q.push(v);
+
+                        sum_distances += distances[v];
+                        reachable_nodes++;
+                    }
+                }
+            }
+
+            if (sum_distances > 0) {
+                closeness_centrality[source] = static_cast<double>(reachable_nodes) / sum_distances;
+            }
+        }
+
+        return closeness_centrality;
+    }
+
+    std::vector<double> compute_betweenness_centrality() const {
+        const size_t num_nodes = this->adjacency_list.size();
+        std::vector<double> betweenness(num_nodes, 0.0);
+
+        // #pragma omp parallel
+        {
+            std::vector<double> betweenness_private(num_nodes, 0.0);
+
+            // #pragma omp for schedule(dynamic)
+            for (uint16_t s = 0; s < num_nodes; ++s) {
+                std::stack<uint16_t> S;
+                std::vector<std::vector<uint16_t>> P(num_nodes);
+                std::vector<int> sigma(num_nodes, 0);
+                std::vector<int> d(num_nodes, -1);
+                std::queue<uint16_t> Q;
+
+                sigma[s] = 1;
+                d[s] = 0;
+                Q.push(s);
+
+                while (!Q.empty()) {
+                    uint16_t v = Q.front();
+                    Q.pop();
+                    S.push(v);
+
+                    for (uint16_t w : this->adjacency_list[v]) {
+                        if (d[w] < 0) {
+                            d[w] = d[v] + 1;
+                            Q.push(w);
+                        }
+                        if (d[w] == d[v] + 1) {
+                            sigma[w] += sigma[v];
+                            P[w].push_back(v);
+                        }
+                    }
+                }
+
+                std::vector<double> delta(num_nodes, 0.0);
+
+                while (!S.empty()) {
+                    uint16_t w = S.top();
+                    S.pop();
+                    for (uint16_t v : P[w]) {
+                        delta[v] += (static_cast<double>(sigma[v]) / sigma[w]) * (1.0 + delta[w]);
+                    }
+                    if (w != s) {
+                        betweenness_private[w] += delta[w];
+                    }
+                }
+            }
+
+            // #pragma omp critical
+            {
+                for (uint16_t i = 0; i < num_nodes; ++i) {
+                    betweenness[i] += betweenness_private[i];
+                }
+            }
+        }
+
+        // Normalize the betweenness values
+        for (double& val : betweenness) {
+            val /= 2.0;
+        }
+
+        return betweenness;
+    }
+
+    std::vector<double> compute_pagerank(const double damping_factor = 0.85, const int max_iterations = 100, const double tol = 1e-6) const {
+        const size_t num_nodes = this->adjacency_list.size();
+        std::vector pagerank(num_nodes, 1.0 / static_cast<double>(num_nodes));
+        std::vector new_pagerank(num_nodes, 0.0);
+
+        std::vector<uint16_t> out_degree(num_nodes);
+        for (size_t i = 0; i < num_nodes; ++i) {
+            out_degree[i] = static_cast<uint16_t>(this->adjacency_list[i].size());
+        }
+
+        for (int iter = 0; iter < max_iterations; ++iter) {
+            double dangling_sum = 0.0;
+            for (size_t i = 0; i < num_nodes; ++i) {
+                new_pagerank[i] = 0.0;
+                if (out_degree[i] == 0) {
+                    dangling_sum += pagerank[i];
+                }
+            }
+
+            // #pragma omp parallel for
+            for (size_t u = 0; u < num_nodes; ++u) {
+                for (uint16_t v : this->adjacency_list[u]) {
+                    // #pragma omp atomic
+                    new_pagerank[v] += pagerank[u] / out_degree[u];
+                }
+            }
+
+            double diff = 0.0;
+            for (size_t i = 0; i < num_nodes; ++i) {
+                new_pagerank[i] = (1.0 - damping_factor) / num_nodes + damping_factor * (new_pagerank[i] + dangling_sum / num_nodes);
+                diff += std::abs(new_pagerank[i] - pagerank[i]);
+                pagerank[i] = new_pagerank[i];
+            }
+
+            if (diff < tol) {
+                break;
+            }
+        }
+
+        return pagerank;
+    }
 };
 
 
@@ -565,7 +757,7 @@ int main() {
 
         // Add timing here
         const auto start = std::chrono::high_resolution_clock::now();
-        const std::vector<std::vector<PairData>> pair_path_data = graph.compute_all_shortest_paths_statistics(true, true);
+        const std::vector<std::vector<PairData>> pair_path_data = graph.compute_all_shortest_paths_statistics(false, false);
 
         const auto end = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> elapsed_seconds = end - start;
@@ -574,6 +766,41 @@ int main() {
         dump_to_file("../data/paths-and-graph/pair_stats.txt", pair_path_data);
 
         constexpr uint16_t max_print_value = 30;
+
+        // Compute closeness centrality
+        const std::vector<double> closeness_centrality = graph.compute_closeness_centrality();
+        std::cout << "Closeness centrality:\n";
+        for (uint16_t i = 0; i < max_print_value; ++i) {
+            std::cout << graph.get_node_name(i) << ": " << closeness_centrality[i] << '\n';
+        }
+
+        // Compute betweenness centrality
+        const std::vector<double> betweenness_centrality = graph.compute_betweenness_centrality();
+        std::cout << "\nBetweenness centrality:\n";
+        for (uint16_t i = 0; i < max_print_value; ++i) {
+            std::cout << graph.get_node_name(i) << ": " << betweenness_centrality[i] << '\n';
+        }
+
+        // Compute PageRank
+        const std::vector<double> pagerank = graph.compute_pagerank();
+        std::cout << "\nPageRank:\n";
+        for (uint16_t i = 0; i < max_print_value; ++i) {
+            std::cout << graph.get_node_name(i) << ": " << pagerank[i] << '\n';
+        }
+
+        // Create a vector of NodeData objects and dump to file
+        std::vector<NodeData> node_data;
+        for (uint16_t i = 0; i < graph.get_num_nodes(); ++i) {
+            NodeData data;
+            data.name = graph.get_node_name(i);
+            data.degree = graph.get_node_degree(i);
+            data.closeness_centrality = closeness_centrality[i];
+            data.betweenness_centrality = betweenness_centrality[i];
+            data.pagerank = pagerank[i];
+            node_data.push_back(data);
+        }
+
+        dump_node_data_to_file("../data/paths-and-graph/node_data.tsv", node_data);
 
         // Draw some random samples for the pairs and display the results
         for (uint16_t i = 0; i < max_print_value; ++i) {
