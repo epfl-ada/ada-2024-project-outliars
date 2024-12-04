@@ -19,9 +19,9 @@
 #include <omp.h>
 
 /// Maximum number of paths to consider for one longer paths
-#define MAX_CONSIDERED_NUMBER_OF_OL_PATHS 5
+#define MAX_CONSIDERED_NUMBER_OF_OL_PATHS 10000
 /// Maximum number of paths to consider for two longer paths
-#define MAX_CONSIDERED_NUMBER_OF_TL_PATHS 3
+#define MAX_CONSIDERED_NUMBER_OF_TL_PATHS 300
 
 
 // Function to trim whitespace from a string (helper function)
@@ -171,17 +171,70 @@ struct PairData {
     }
 };
 
+struct PairDataPagerank {
+    /// Source node ID
+    uint16_t source;
+    /// Target node ID
+    uint16_t target;
+    /// Shortest path length from source to target
+    uint16_t shortest_path_length;
+    /// Number of shortest paths from source to target
+    uint16_t shortest_path_count;
+    /// Maximum pagerank of node on any shortest path (SP) from source to target
+    float max_sp_pagerank;
+    /// Maximum average pagerank of nodes on any shortest path from source to target
+    float max_sp_average_pagerank;
+    /// Average pagerank off all nodes on all shortest paths from source to target
+    float average_sp_average_pagerank;
+    /// Number of paths that are one longer (OL) than the shortest path from source to target
+    uint32_t one_longer_path_count;
+    /// Maximum pagerank of node on any path that is OL than the SP from source to target
+    float max_ol_pagerank;
+    /// Maximum average pagerank of nodes on any path that is OL than the SP from source to target
+    float max_ol_average_pagerank;
+    /// Average pagerank off all nodes on all paths that are OL than the SP from source to target
+    float average_ol_average_pagerank;
+    /// Number of paths that are two longer (TL) than the shortest path from source to target
+    uint32_t two_longer_path_count;
+    /// Maximum pagerank of node on any path that is two longer (TL) than the SP from source to target
+    float max_tl_pagerank;
+    /// Maximum average pagerank of nodes on any path that is TL than the SP from source to target
+    float max_tl_average_pagerank;
+    // /// Average pagerank off all nodes on all paths that are TL than the SP from source to target
+    // float average_tl_average_pagerank;
+
+    [[nodiscard]] std::string to_string() const {
+        std::ostringstream oss;
+        oss << "Source:                         " << source << '\n'
+            << "Target:                         " << target << '\n'
+            << "Shortest path length:           " << shortest_path_length << '\n'
+            << "Shortest path count:            " << shortest_path_count << '\n'
+            << "Max SP pagerank:                " << max_sp_pagerank << '\n'
+            << "Max SP average pagerank:        " << max_sp_average_pagerank << '\n'
+            << "Average SP average pagerank:    " << average_sp_average_pagerank << '\n'
+            << "One longer path count:          " << one_longer_path_count << '\n'
+            << "Max OL pagerank:                " << max_ol_pagerank << '\n'
+            << "Max OL average pagerank:        " << max_ol_average_pagerank << '\n'
+            << "Average OL average pagerank:    " << average_ol_average_pagerank << '\n'
+            << "Two longer path count:          " << two_longer_path_count << '\n'
+            << "Max TL pagerank:                " << max_tl_pagerank << '\n'
+            << "Max TL average pagerank:        " << max_tl_average_pagerank << '\n';
+            // << "Average TL average pagerank:    " << average_tl_average_pagerank << '\n';
+        return oss.str();
+    }
+};
+
 struct NodeData {
     /// Node name
     std::string name;
     /// Node degree
-    uint16_t degree;
+    uint16_t degree{};
     /// Node closeness centrality
-    double closeness_centrality;
+    double closeness_centrality{};
     /// Node betweenness centrality
-    double betweenness_centrality;
+    double betweenness_centrality{};
     /// Node PageRank
-    double pagerank;
+    double pagerank{};
 
     [[nodiscard]] std::string to_string() const {
         std::ostringstream oss;
@@ -254,6 +307,8 @@ private:
     std::vector<std::vector<uint16_t>> adjacency_list;
     /// Degrees of nodes (number of neighbors)
     std::vector<uint16_t> degrees;
+    /// PageRank values of nodes
+    std::vector<double> pageranks;
 
     void compute_node_degrees() {
         size_t num_nodes = this->adjacency_list.size();
@@ -270,6 +325,10 @@ private:
                                   return this->degrees[a] > this->degrees[b];
                               });
         }
+    }
+
+    void compute_pageranks() {
+        this->pageranks = this->compute_pagerank();
     }
 
 public:
@@ -384,6 +443,7 @@ public:
         infile.close();
 
         graph.compute_node_degrees();
+        graph.compute_pageranks();
         // graph.sort_adjacency_list_according_to_degrees();
         return graph;
     }
@@ -401,6 +461,76 @@ public:
                 std::cout << neighbor_id << " (" << this->id_to_node[neighbor_id] << ") ";
             }
             std::cout << '\n';
+        }
+    }
+
+    std::vector<std::pair<uint16_t, uint16_t>> load_pairs_from_file(const std::string& filename) const {
+        std::vector<std::pair<uint16_t, uint16_t>> pairs;
+        std::ifstream infile(filename);
+
+        if (!infile.is_open()) {
+            throw std::runtime_error("Error opening file: " + filename);
+        }
+
+        // The line contains tab separated node names
+        std::string line;
+        while (std::getline(infile, line)) {
+            line = trim(line);
+            if (line.empty()) {
+                continue;
+            }
+
+            std::istringstream iss(line);
+            std::string node_name1, node_name2;
+            if (!(iss >> node_name1 >> node_name2)) {
+                throw std::runtime_error("Error parsing pair line: " + line);
+            }
+
+            bool found = true;
+            // Check whether the name exists in the map
+            if (!this->node_to_id.contains(node_name1)) {
+                std::cerr << "Node name not found in the graph: " << node_name1 << '\n';
+                found = false;
+            }
+            if (!this->node_to_id.contains(node_name2)) {
+                std::cerr << "Node name not found in the graph: " << node_name2 << '\n';
+                found = false;
+            }
+
+            if (found) {
+                uint16_t node_id1 = this->get_node_id(node_name1);
+                uint16_t node_id2 = this->get_node_id(node_name2);
+                pairs.emplace_back(node_id1, node_id2);
+            }
+        }
+
+        return pairs;
+    }
+
+    void dump_pair_stats_to_file(const std::string& filename, const std::vector<PairDataPagerank>& pair_data) const {
+        std::ofstream outfile(filename);
+        if (!outfile.is_open()) {
+            throw std::runtime_error("Error opening file: " + filename);
+        }
+
+        for (const auto & pair : pair_data) {
+            std::string source_name = this->get_node_name(pair.source);
+            std::string target_name = this->get_node_name(pair.target);
+
+            outfile << source_name << '\t'
+                    << target_name << '\t'
+                    << pair.shortest_path_length << '\t'
+                    << pair.shortest_path_count << '\t'
+                    << pair.max_sp_pagerank << '\t'
+                    << pair.max_sp_average_pagerank << '\t'
+                    << pair.average_sp_average_pagerank << '\t'
+                    << pair.one_longer_path_count << '\t'
+                    << pair.max_ol_pagerank << '\t'
+                    << pair.max_ol_average_pagerank << '\t'
+                    << pair.average_ol_average_pagerank << '\t'
+                    << pair.two_longer_path_count << '\t'
+                    << pair.max_tl_pagerank << '\t'
+                    << pair.max_tl_average_pagerank << '\n';
         }
     }
 
@@ -498,6 +628,38 @@ public:
         return {max_path_node_degree, max_average_path_node_degree, total_paths_node_degree};
     }
 
+    std::tuple<float, float, float> compute_paths_statistics(const std::vector<std::vector<uint16_t>>& paths) const{
+        float max_path_pagerank = 0;
+        float max_average_path_pagerank = 0;
+        float total_paths_pagerank = 0;
+
+        for (const std::vector<uint16_t> &path: paths) {
+            float path_pagerank = 0;
+            float temp_average_pagerank = 0;
+
+            for (uint16_t node_idx = 0; node_idx < static_cast<uint16_t>(path.size()) - 1; ++node_idx) {
+                const uint16_t node = path[node_idx];
+                const auto node_pagerank = static_cast<float>(this->pageranks[node]);
+
+                path_pagerank += node_pagerank;
+                total_paths_pagerank += node_pagerank;
+                if (this->pageranks[node] > max_path_pagerank) {
+                    max_path_pagerank = node_pagerank;
+                }
+            }
+
+            temp_average_pagerank = path_pagerank / static_cast<float>(path.size());
+
+            if (temp_average_pagerank > max_average_path_pagerank) {
+                max_average_path_pagerank = temp_average_pagerank;
+            }
+        }
+
+        total_paths_pagerank /= static_cast<float>(paths.size() * paths[0].size());
+
+        return {max_path_pagerank, max_average_path_pagerank, total_paths_pagerank};
+    }
+
     std::vector<std::vector<PairData>> compute_all_shortest_paths_statistics(
             const bool compute_one_longer_paths = false,
             const bool compute_two_longer_paths = false
@@ -591,6 +753,113 @@ public:
             if (completed_nodes % omp_get_num_threads() == 0 || completed_nodes + omp_get_num_threads() >= num_nodes) {
                 printf("Completed %4d nodes out of %d (%4.1f%%)\n", completed_nodes, num_nodes,
                        100.0 * completed_nodes / num_nodes);
+            }
+        }
+
+
+        std::cout << "Completed all " << completed_nodes << " nodes\n";
+
+        return pair_path_data;
+    }
+
+    std::vector<PairDataPagerank> compute_statistics_for_pairs(
+            const std::vector<std::pair<uint16_t, uint16_t>>& pairs,
+            const bool compute_one_longer_paths = false,
+            const bool compute_two_longer_paths = false
+    ) const {
+        const auto num_pairs = static_cast<uint32_t>(pairs.size());
+
+        std::vector<PairDataPagerank> pair_path_data(num_pairs);
+
+        uint32_t completed_nodes = 0;
+        const auto& graph = const_cast<Graph&>(*this);
+
+        const std::vector<std::vector<uint16_t>> reverse_adj_list = build_reverse_adj_list(this->adjacency_list);
+
+        #pragma omp parallel for default(none) shared(pair_path_data, completed_nodes, reverse_adj_list, graph, pairs) \
+                                               firstprivate(num_pairs, compute_one_longer_paths, compute_two_longer_paths) \
+                                               schedule(dynamic)
+        for (size_t pair_idx = 0; pair_idx < num_pairs; ++pair_idx) {
+            const uint16_t source = pairs[pair_idx].first;
+            const uint16_t target = pairs[pair_idx].second;
+
+            pair_path_data[pair_idx].source = source;
+            pair_path_data[pair_idx].target = target;
+
+            std::vector<uint16_t> distances;
+            std::vector<std::vector<uint16_t>> predecessors;
+
+            graph.bfs_all_shortest_paths(source, distances, predecessors);
+
+            if (distances[target] != UINT16_MAX) {
+
+                std::vector<std::vector<uint16_t>> paths;
+                std::vector<uint16_t> current_path;
+
+                paths.clear();
+                current_path.clear();
+
+                reconstruct_paths(source, target, predecessors, paths, current_path);
+
+                if (!paths.empty()) {
+                    pair_path_data[pair_idx].shortest_path_length = paths[0].size() - 1;
+                    pair_path_data[pair_idx].shortest_path_count = paths.size();
+
+                    auto sp_statistics = graph.compute_paths_statistics(paths);
+                    pair_path_data[pair_idx].max_sp_pagerank = std::get<0>(sp_statistics);
+                    pair_path_data[pair_idx].max_sp_average_pagerank = std::get<1>(sp_statistics);
+                    pair_path_data[pair_idx].average_sp_average_pagerank = std::get<2>(sp_statistics);
+
+                    std::unordered_set<uint16_t> visited;
+
+                    if (compute_one_longer_paths) {
+                        paths.clear();
+                        current_path.clear();
+
+                        reconstruct_paths_of_length(
+                            source, target, predecessors, distances, reverse_adj_list,
+                            paths, current_path, visited,
+                            pair_path_data[pair_idx].shortest_path_length + 1,
+                            MAX_CONSIDERED_NUMBER_OF_OL_PATHS
+                        );
+
+                        if (!paths.empty()) {
+                            pair_path_data[pair_idx].one_longer_path_count = paths.size();
+
+                            auto ol_statistics = graph.compute_paths_statistics(paths);
+                            pair_path_data[pair_idx].max_ol_pagerank = std::get<0>(ol_statistics);
+                            pair_path_data[pair_idx].max_ol_average_pagerank= std::get<1>(ol_statistics);
+                            pair_path_data[pair_idx].average_ol_average_pagerank = std::get<2>(ol_statistics);
+                        }
+                    }
+
+                    if (compute_two_longer_paths) {
+                        paths.clear();
+                        current_path.clear();
+                        visited.clear();
+
+                        reconstruct_paths_of_length(source, target, predecessors, distances, reverse_adj_list,
+                                                    paths, current_path, visited,
+                                                    pair_path_data[pair_idx].shortest_path_length + 2,
+                                                    MAX_CONSIDERED_NUMBER_OF_TL_PATHS);
+
+                        if (!paths.empty()) {
+                            pair_path_data[pair_idx].two_longer_path_count = paths.size();
+
+                            auto ol_statistics = graph.compute_paths_statistics(paths);
+                            pair_path_data[pair_idx].max_tl_pagerank = std::get<0>(ol_statistics);
+                            pair_path_data[pair_idx].max_tl_average_pagerank = std::get<1>(ol_statistics);
+                        }
+                    }
+                }
+            }
+
+            #pragma omp atomic
+            completed_nodes++;
+
+            if (completed_nodes % (20 * omp_get_num_threads()) == 0 || completed_nodes + omp_get_num_threads() >= num_pairs) {
+                printf("Completed %4d nodes out of %d (%4.1f%%)\n", completed_nodes, num_pairs,
+                       100.0 * completed_nodes / num_pairs);
             }
         }
 
@@ -705,7 +974,7 @@ public:
         return betweenness;
     }
 
-    std::vector<double> compute_pagerank(const double damping_factor = 0.85, const int max_iterations = 100, const double tol = 1e-6) const {
+    std::vector<double> compute_pagerank(const double damping_factor = 0.9, const int max_iterations = 300, const double tol = 1e-8) const {
         const size_t num_nodes = this->adjacency_list.size();
         std::vector pagerank(num_nodes, 1.0 / static_cast<double>(num_nodes));
         std::vector new_pagerank(num_nodes, 0.0);
@@ -754,39 +1023,32 @@ int main() {
         omp_set_num_threads(16);
 
         const Graph graph = Graph::load_graph_from_file("../data/paths-and-graph/adj_list.txt");
+        std::cout << "Loaded graph with " << graph.get_num_nodes() << " nodes\n";
+
+        const auto pairs = graph.load_pairs_from_file("../data/paths-and-graph/unique_games.tsv");
+        std::cout << "Loaded " << pairs.size() << " pairs to compute statistics for\n";
 
         // Add timing here
         const auto start = std::chrono::high_resolution_clock::now();
-        const std::vector<std::vector<PairData>> pair_path_data = graph.compute_all_shortest_paths_statistics(false, false);
+
+        auto pair_statistics = graph.compute_statistics_for_pairs(pairs, true, true);
 
         const auto end = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> elapsed_seconds = end - start;
         std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
 
-        dump_to_file("../data/paths-and-graph/pair_stats.txt", pair_path_data);
+        graph.dump_pair_stats_to_file("../data/paths-and-graph/pair_data.tsv", pair_statistics);
 
         constexpr uint16_t max_print_value = 30;
 
         // Compute closeness centrality
         const std::vector<double> closeness_centrality = graph.compute_closeness_centrality();
-        std::cout << "Closeness centrality:\n";
-        for (uint16_t i = 0; i < max_print_value; ++i) {
-            std::cout << graph.get_node_name(i) << ": " << closeness_centrality[i] << '\n';
-        }
 
         // Compute betweenness centrality
         const std::vector<double> betweenness_centrality = graph.compute_betweenness_centrality();
-        std::cout << "\nBetweenness centrality:\n";
-        for (uint16_t i = 0; i < max_print_value; ++i) {
-            std::cout << graph.get_node_name(i) << ": " << betweenness_centrality[i] << '\n';
-        }
 
         // Compute PageRank
         const std::vector<double> pagerank = graph.compute_pagerank();
-        std::cout << "\nPageRank:\n";
-        for (uint16_t i = 0; i < max_print_value; ++i) {
-            std::cout << graph.get_node_name(i) << ": " << pagerank[i] << '\n';
-        }
 
         // Create a vector of NodeData objects and dump to file
         std::vector<NodeData> node_data;
@@ -804,11 +1066,12 @@ int main() {
 
         // Draw some random samples for the pairs and display the results
         for (uint16_t i = 0; i < max_print_value; ++i) {
-            const uint16_t source = rand() % graph.get_num_nodes();
-            const uint16_t target = rand() % graph.get_num_nodes();
+            const auto pair = static_cast<uint32_t>(rand() % pairs.size());
+            const uint16_t source = pairs[pair].first;
+            const uint16_t target = pairs[pair].second;
 
             std::cout << "Shortest path from " << graph.get_node_name(source) << " to " << graph.get_node_name(target)<< ":\n";
-            std::cout << pair_path_data[source][target].to_string();
+            std::cout << pair_statistics[pair].to_string() << '\n';
             std::cout << std::endl;
         }
     }
