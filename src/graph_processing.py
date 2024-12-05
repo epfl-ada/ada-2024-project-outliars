@@ -213,6 +213,8 @@ def export_graph_to_indexed_format(adj_list: dict, output_file: str):
         for node, idx in node_to_id.items():
             f.write(f'{idx}\t{node}\n')
         f.write('\n')  # Add a newline for readability
+        
+        unique_nodes = sorted(node_to_id.keys())
 
         # Write the adjacency lists using indices
         f.write('# Adjacency Lists\n')

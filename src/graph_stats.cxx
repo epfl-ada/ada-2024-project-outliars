@@ -19,9 +19,9 @@
 #include <omp.h>
 
 /// Maximum number of paths to consider for one longer paths
-#define MAX_CONSIDERED_NUMBER_OF_OL_PATHS 10000
+#define MAX_CONSIDERED_NUMBER_OF_OL_PATHS 100
 /// Maximum number of paths to consider for two longer paths
-#define MAX_CONSIDERED_NUMBER_OF_TL_PATHS 300
+#define MAX_CONSIDERED_NUMBER_OF_TL_PATHS 30
 
 
 // Function to trim whitespace from a string (helper function)
@@ -79,7 +79,7 @@ void reconstruct_paths_of_length(const uint16_t source, const uint16_t target,
                                  std::unordered_set<uint16_t>& visited,
                                  const uint16_t desired_length,
                                  const uint16_t max_considered_number_of_paths) {
-    if (current_path.size() > desired_length + 1) {
+    if (current_path.size() > static_cast<uint16_t>(desired_length + 1)) {
         return;
     }
 
@@ -93,7 +93,7 @@ void reconstruct_paths_of_length(const uint16_t source, const uint16_t target,
 
     if (target == source) {
         current_path.push_back(source);
-        if (current_path.size() == desired_length + 1) {
+        if (current_path.size() == static_cast<uint16_t>(desired_length + 1)) {
             std::vector<uint16_t> path = current_path;
             std::ranges::reverse(path);
             paths.push_back(path);
@@ -107,7 +107,7 @@ void reconstruct_paths_of_length(const uint16_t source, const uint16_t target,
 
     const uint16_t current_distance = distances[target];
 
-    if (current_path.size() < desired_length + 1) {
+    if (current_path.size() < static_cast<uint16_t>(desired_length + 1)) {
         // Consider predecessors (shortest paths)
         for (const uint16_t pred : predecessors[target]) {
             reconstruct_paths_of_length(source, pred, predecessors, distances, reverse_adj_list, paths, current_path, visited, desired_length, max_considered_number_of_paths);
@@ -288,7 +288,6 @@ void dump_node_data_to_file(const std::string& filename, const std::vector<NodeD
     for (uint16_t i = 0; i < static_cast<uint16_t>(node_data.size()); ++i) {
         outfile << node_data[i].name << '\t'
                 << node_data[i].degree << '\t'
-                << std::scientific << std::setprecision(4)
                 << node_data[i].closeness_centrality << '\t'
                 << node_data[i].betweenness_centrality << '\t'
                 << node_data[i].pagerank << '\n';

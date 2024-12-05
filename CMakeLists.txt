@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.29)
+cmake_minimum_required(VERSION 3.19)
 project(ada_2024_project_outliars)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -34,6 +34,20 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /EHsc")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi /Od")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2")
+endif()
+
+# Print the flags that are used in the current configuration
+message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
+message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
+
+# Print the mode that is used in the current configuration
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Configuring for Debug mode")
+elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
+    message(STATUS "Configuring for Release mode")
+else()
+    message(WARNING "Unknown build type")
 endif()
 
 
