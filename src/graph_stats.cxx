@@ -19,9 +19,9 @@
 #include <omp.h>
 
 /// Maximum number of paths to consider for one longer paths
-#define MAX_CONSIDERED_NUMBER_OF_OL_PATHS 100
+#define MAX_CONSIDERED_NUMBER_OF_OL_PATHS 30000
 /// Maximum number of paths to consider for two longer paths
-#define MAX_CONSIDERED_NUMBER_OF_TL_PATHS 30
+#define MAX_CONSIDERED_NUMBER_OF_TL_PATHS 300
 
 
 // Function to trim whitespace from a string (helper function)
