@@ -126,51 +126,6 @@ void reconstruct_paths_of_length(const uint16_t source, const uint16_t target,
 }
 
 
-struct PairData {
-    /// Shortest path length from source to target
-    uint16_t shortest_path_length;
-    /// Number of shortest paths from source to target
-    uint16_t shortest_path_count;
-    /// Maximum degree of node on any shortest path (SP) from source to target
-    uint16_t max_sp_node_degree;
-    /// Maximum average degree of nodes on any shortest path from source to target
-    uint16_t max_sp_average_node_degree;
-    /// Average degree off all nodes on all shortest paths from source to target
-    uint16_t average_sp_average_node_degree;
-    /// Number of paths that are one longer (OL) than the shortest path from source to target
-    uint16_t one_longer_path_count;
-    /// Maximum degree of node on any path that is OL than the SP from source to target
-    uint16_t max_ol_node_degree;
-    /// Maximum average degree of nodes on any path that is OL than the SP from source to target
-    uint16_t max_ol_average_node_degree;
-    /// Average degree off all nodes on all paths that are OL than the SP from source to target
-    uint16_t average_ol_average_node_degree;
-    /// Number of paths that are two longer (TL) than the shortest path from source to target
-    uint16_t two_longer_path_count;
-    /// Maximum degree of node on any path that is two longer (TL) than the SP from source to target
-    uint16_t max_tl_node_degree;
-    /// Maximum average degree of nodes on any path that is TL than the SP from source to target
-    uint16_t max_tl_average_node_degree;
-
-    // to_string method
-    [[nodiscard]] std::string to_string() const {
-        std::ostringstream oss;
-        oss << "Shortest path length:             " << shortest_path_length << '\n'
-            << "Shortest path count:              " << shortest_path_count << '\n'
-            << "Max SP node degree:               " << max_sp_node_degree << '\n'
-            << "Max SP average node degree:       " << max_sp_average_node_degree << '\n'
-            << "Average SP average node degree:   " << average_sp_average_node_degree << '\n'
-            << "One longer path count:            " << one_longer_path_count << '\n'
-            << "Max OL node degree:               " << max_ol_node_degree << '\n'
-            << "Max OL average node degree:       " << max_ol_average_node_degree << '\n'
-            << "Average OL average node degree:   " << average_ol_average_node_degree << '\n'
-            << "Two longer path count:            " << two_longer_path_count << '\n'
-            << "Max TL node degree:               " << max_tl_node_degree << '\n'
-            << "Max TL average node degree:       " << max_tl_average_node_degree << '\n';
-        return oss.str();
-    }
-};
-
 struct PairDataPagerank {
     /// Source node ID
     uint16_t source;
@@ -224,6 +179,7 @@ struct PairDataPagerank {
     }
 };
 
+
 struct NodeData {
     /// Node name
     std::string name;
@@ -246,37 +202,6 @@ struct NodeData {
         return oss.str();
     }
 };
-
-void dump_to_file(const std::string& filename, const std::vector<std::vector<PairData>>& pair_data) {
-    std::ofstream outfile(filename);
-    if (!outfile.is_open()) {
-        throw std::runtime_error("Error opening file: " + filename);
-    }
-
-    for (uint16_t row = 0; row < static_cast<uint16_t>(pair_data.size()); ++row) {
-        for (uint16_t col = 0; col < static_cast<uint16_t>(pair_data[row].size()); ++col) {
-            if (pair_data[row][col].shortest_path_count == 0) {
-                continue;
-            }
-
-            outfile << row << ' ' << col << ' '
-                    << pair_data[row][col].shortest_path_length << ' '
-                    << pair_data[row][col].shortest_path_count << ' '
-                    << pair_data[row][col].max_sp_node_degree << ' '
-                    << pair_data[row][col].max_sp_average_node_degree << ' '
-                    << pair_data[row][col].average_sp_average_node_degree << ' '
-                    << pair_data[row][col].one_longer_path_count << ' '
-                    << pair_data[row][col].max_ol_node_degree << ' '
-                    << pair_data[row][col].max_ol_average_node_degree << ' '
-                    << pair_data[row][col].average_ol_average_node_degree << ' '
-                    << pair_data[row][col].two_longer_path_count << ' '
-                    << pair_data[row][col].max_tl_node_degree << ' '
-                    << pair_data[row][col].max_tl_average_node_degree << '\n';
-        }
-    }
-
-    outfile.close();
-}
 
 void dump_node_data_to_file(const std::string& filename, const std::vector<NodeData>& node_data) {
     std::ofstream outfile(filename);
@@ -596,37 +521,6 @@ public:
         return all_paths;
     }
 
-    std::tuple<uint16_t, uint16_t, uint16_t> compute_shortest_paths_statistics(const std::vector<std::vector<uint16_t>>& paths) const{
-        uint16_t max_path_node_degree = 0;
-        uint16_t max_average_path_node_degree = 0;
-        uint16_t total_paths_node_degree = 0;
-
-        for (const std::vector<uint16_t> &path: paths) {
-            uint16_t path_node_degree = 0;
-            uint16_t temp_average_node_degree = 0;
-
-            for (uint16_t node_idx = 0; node_idx < static_cast<uint16_t>(path.size()) - 1; ++node_idx) {
-                const uint16_t node = path[node_idx];
-
-                path_node_degree += this->degrees[node];
-                total_paths_node_degree += this->degrees[node];
-                if (this->degrees[node] > max_path_node_degree) {
-                    max_path_node_degree = this->degrees[node];
-                }
-            }
-
-            temp_average_node_degree = path_node_degree / path.size();
-
-            if (temp_average_node_degree > max_average_path_node_degree) {
-                max_average_path_node_degree = temp_average_node_degree;
-            }
-        }
-
-        total_paths_node_degree /= paths.size() * paths[0].size();
-
-        return {max_path_node_degree, max_average_path_node_degree, total_paths_node_degree};
-    }
-
     std::tuple<float, float, float> compute_paths_statistics(const std::vector<std::vector<uint16_t>>& paths) const{
         float max_path_pagerank = 0;
         float max_average_path_pagerank = 0;
@@ -657,108 +551,6 @@ public:
         total_paths_pagerank /= static_cast<float>(paths.size() * paths[0].size());
 
         return {max_path_pagerank, max_average_path_pagerank, total_paths_pagerank};
-    }
-
-    std::vector<std::vector<PairData>> compute_all_shortest_paths_statistics(
-            const bool compute_one_longer_paths = false,
-            const bool compute_two_longer_paths = false
-    ) const {
-        const auto num_nodes = static_cast<uint16_t>(this->adjacency_list.size());
-
-        std::vector<std::vector<PairData>> pair_path_data;
-        pair_path_data.resize(num_nodes, std::vector<PairData>(num_nodes));
-
-        const std::vector<std::vector<uint16_t>> reverse_adj_list = build_reverse_adj_list(this->adjacency_list);
-
-        uint32_t completed_nodes = 0;
-        const auto& graph = const_cast<Graph&>(*this);
-
-        #pragma omp parallel for default(none) shared(pair_path_data, completed_nodes, reverse_adj_list, graph) \
-                                               firstprivate(num_nodes, compute_one_longer_paths, compute_two_longer_paths) \
-                                               schedule(dynamic)
-        for (uint16_t source = 0; source < num_nodes; ++source) {
-            std::vector<uint16_t> distances;
-            std::vector<std::vector<uint16_t>> predecessors;
-
-            graph.bfs_all_shortest_paths(source, distances, predecessors);
-
-            std::vector<std::vector<uint16_t>> paths;
-            std::vector<uint16_t> current_path;
-            std::unordered_set<uint16_t> visited;
-
-            for (uint16_t target = 0; target < num_nodes; ++target) {
-                if (distances[target] != UINT16_MAX) {
-                    paths.clear();
-                    current_path.clear();
-
-                    reconstruct_paths(source, target, predecessors, paths, current_path);
-
-                    if (!paths.empty()) {
-                        pair_path_data[source][target].shortest_path_length = paths[0].size() - 1;
-                        pair_path_data[source][target].shortest_path_count = paths.size();
-
-                        auto sp_statistics = graph.compute_shortest_paths_statistics(paths);
-                        pair_path_data[source][target].max_sp_node_degree = std::get<0>(sp_statistics);
-                        pair_path_data[source][target].max_sp_average_node_degree = std::get<1>(sp_statistics);
-                        pair_path_data[source][target].average_sp_average_node_degree = std::get<2>(sp_statistics);
-
-                        if (compute_one_longer_paths) {
-                            paths.clear();
-                            current_path.clear();
-                            visited.clear();
-
-                            reconstruct_paths_of_length(
-                                source, target, predecessors, distances, reverse_adj_list,
-                                paths, current_path, visited,
-                                pair_path_data[source][target].shortest_path_length + 1,
-                                MAX_CONSIDERED_NUMBER_OF_OL_PATHS
-                            );
-
-                            if (!paths.empty()) {
-                                pair_path_data[source][target].one_longer_path_count = paths.size();
-
-                                auto ol_statistics = graph.compute_shortest_paths_statistics(paths);
-                                pair_path_data[source][target].max_ol_node_degree = std::get<0>(ol_statistics);
-                                pair_path_data[source][target].max_ol_average_node_degree = std::get<1>(ol_statistics);
-                                pair_path_data[source][target].average_ol_average_node_degree = std::get<2>(ol_statistics);
-                            }
-                        }
-
-                        if (compute_two_longer_paths) {
-                            paths.clear();
-                            current_path.clear();
-                            visited.clear();
-
-                            reconstruct_paths_of_length(source, target, predecessors, distances, reverse_adj_list,
-                                                        paths, current_path, visited,
-                                                        pair_path_data[source][target].shortest_path_length + 2,
-                                                        MAX_CONSIDERED_NUMBER_OF_TL_PATHS);
-
-                            if (!paths.empty()) {
-                                pair_path_data[source][target].two_longer_path_count = paths.size();
-
-                                auto ol_statistics = graph.compute_shortest_paths_statistics(paths);
-                                pair_path_data[source][target].max_tl_node_degree = std::get<0>(ol_statistics);
-                                pair_path_data[source][target].max_tl_average_node_degree = std::get<1>(ol_statistics);
-                            }
-                        }
-                    }
-                }
-            }
-
-            #pragma omp atomic
-            completed_nodes++;
-
-            if (completed_nodes % omp_get_num_threads() == 0 || completed_nodes + omp_get_num_threads() >= num_nodes) {
-                printf("Completed %4d nodes out of %d (%4.1f%%)\n", completed_nodes, num_nodes,
-                       100.0 * completed_nodes / num_nodes);
-            }
-        }
-
-
-        std::cout << "Completed all " << completed_nodes << " nodes\n";
-
-        return pair_path_data;
     }
 
     std::vector<PairDataPagerank> compute_statistics_for_pairs(
