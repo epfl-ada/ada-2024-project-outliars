@@ -2,10 +2,14 @@ import pandas as pd
 import urllib.parse
 import time
 import re
+from dotenv import load_dotenv
+import os
 from openai import OpenAI
 
 
-client = OpenAI(api_key="**********")  # Replace ********** with your OpenAI API key
+load_dotenv()
+OPEN_AI_KEY = os.getenv("OPEN_AI_KEY")
+client = OpenAI(api_key=OPEN_AI_KEY) 
 
 file_path = "**********"  # Path to the file containing Wikipedia article names
 df = pd.read_csv(file_path, sep="\t", comment="#", header=None, names=["encoded_article"])
