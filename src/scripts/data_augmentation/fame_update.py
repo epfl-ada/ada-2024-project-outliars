@@ -4,14 +4,15 @@ import pandas as pd
 import re
 import time
 from openai import OpenAI
+import os
 
 
 client = OpenAI(api_key="**********")  # Replace ********** with your OpenAI API key
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
-file_path = "topic_fame2.csv"  
+file_path = os.path.abspath(os.path.join(script_dir, "../../../src/data/topic_fame2.csv"))
 df = pd.read_csv(file_path)
-
 
 missing_scores = df[df["fame_score"].isna()].copy()
 
@@ -59,5 +60,6 @@ for i in range(0, len(missing_scores), batch_size):
 missing_scores["fame_score"] = fame_scores
 df.update(missing_scores)
 
+file_path = os.path.abspath(os.path.join(script_dir, "../../../src/data/topic_fame_updated.csv"))
 
-df.to_csv("topic_fame_updated.csv", index=False)
+df.to_csv(file_path, index=False)

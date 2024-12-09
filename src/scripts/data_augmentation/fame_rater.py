@@ -11,7 +11,9 @@ load_dotenv()
 OPEN_AI_KEY = os.getenv("OPEN_AI_KEY")
 client = OpenAI(api_key=OPEN_AI_KEY) 
 
-file_path = "**********"  # Path to the file containing Wikipedia article names
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+file_path =  os.path.abspath(os.path.join(script_dir, "../../../data/paths-and-graph/articles.tsv"))
 df = pd.read_csv(file_path, sep="\t", comment="#", header=None, names=["encoded_article"])
 df["decoded_article"] = df["encoded_article"].apply(urllib.parse.unquote)
 
@@ -57,5 +59,5 @@ for i in range(0, len(df), batch_size):
 
 
 df["fame_score"] = fame_scores_all
-
-df.to_csv("topic_fame2.csv", index=False)
+file_path =  os.path.abspath(os.path.join(script_dir, "../../../src/data/topic_fame2.csv"))
+df.to_csv(file_path, index=False)

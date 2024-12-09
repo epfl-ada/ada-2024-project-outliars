@@ -28,9 +28,11 @@ load_dotenv()
 OPEN_AI_KEY = os.getenv("OPEN_AI_KEY")
 client = OpenAI(api_key=OPEN_AI_KEY)  # Replace with your OpenAI API key
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
 # File paths
-input_file = "/Users/karlovrancic/Library/Mobile Documents/com~apple~CloudDocs/Epfl/ADA/ada-2024-project-outliars/data/paths-and-graph/links.tsv"  # Original links file
-output_file = "link_probabilities.csv"  # File to save probabilities
+input_file = os.path.abspath(os.path.join(script_dir, "../../../data/paths-and-graph/links.tsv"))
+output_file = os.path.abspath(os.path.join(script_dir, "../../../src/data/link_probabilities.csv"))
 
 # Step 1: Load and decode articles
 if not pd.io.common.file_exists(output_file):

@@ -7,20 +7,20 @@ from urllib.parse import unquote
 import numpy as np
 import pandas as pd 
 
-from src.graph_processing import construct_adjacency_list, export_graph_to_indexed_format
+from utils.graph_processing import construct_adjacency_list, export_graph_to_indexed_format
 
 
-DEF_ARTICLES_PATH = "data/paths-and-graph/articles.tsv"
-DEF_CATEGORIES_PATH = "data/paths-and-graph/categories.tsv"
-DEF_LINKS_PATH = "data/paths-and-graph/links.tsv"
-DEF_FINISHED_PATH = "data/paths-and-graph/paths_finished.tsv"
-DEF_UNFINISHED_PATH = "data/paths-and-graph/paths_unfinished.tsv"
+DEF_ARTICLES_PATH = "../data/paths-and-graph/articles.tsv"
+DEF_CATEGORIES_PATH = "../data/paths-and-graph/categories.tsv"
+DEF_LINKS_PATH = "../data/paths-and-graph/links.tsv"
+DEF_FINISHED_PATH = "../data/paths-and-graph/paths_finished.tsv"
+DEF_UNFINISHED_PATH = "../data/paths-and-graph/paths_unfinished.tsv"
 
-DEF_EMBEDDINGS_PATH = "data/article_embeddings_smaller.csv"
-DEF_UNIQUE_GAMES_PATH = "data/paths-and-graph/unique_games.tsv"
-DEF_ADJ_LIST_PATH = "data/paths-and-graph/adj_list.txt"
-DEF_PAIR_STATS_PATH = "data/paths-and-graph/pair_data.tsv"
-DEF_NODE_STATS_PATH = "data/paths-and-graph/node_data.tsv"
+DEF_EMBEDDINGS_PATH = "../data/article_embeddings_smaller.csv"
+DEF_UNIQUE_GAMES_PATH = "../data/paths-and-graph/unique_games.tsv"
+DEF_ADJ_LIST_PATH = "../data/paths-and-graph/adj_list.txt"
+DEF_PAIR_STATS_PATH = "../data/paths-and-graph/pair_data.tsv"
+DEF_NODE_STATS_PATH = "../data/paths-and-graph/node_data.tsv"
 
 EXECTABLE_NAME = 'graph_stats'
 
@@ -220,7 +220,7 @@ def merge_with_node_data(all_games_df, node_stats_df):
     
 def dump_unique_source_target_pairs(valid_games_df):
     unique_games = valid_games_df[['source', 'target']].drop_duplicates()
-    unique_games.to_csv('data/paths-and-graph/unique_games.tsv', sep = '\t', index = False, header = False)
+    unique_games.to_csv('../data/paths-and-graph/unique_games.tsv', sep = '\t', index = False, header = False)
     
     print(f"Dumped {len(unique_games)} unique source-target pairs")
     
