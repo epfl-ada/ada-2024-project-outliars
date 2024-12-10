@@ -129,6 +129,7 @@ def load_embeddings(path: str = DEF_EMBEDDINGS_PATH):
 
 
 def preprocess_and_concat_unfinished_and_finished(unfinished_df, finished_df):
+    # Keep only the games that happened after the first unfinished game
     finished_mod = finished_df.copy()
     finished_before = len(finished_mod)
     
@@ -174,6 +175,23 @@ def prune_invalid_games(all_games_df, articles_df):
     print(f"Pruned invalid games. Now we have {len(all_games_df)} valid games")
     
     return all_games_df
+
+def prune_timeout_games(all_games_df):
+    # Remove games that ended with a timeout
+    all_games_df = all_games_df[all_games_df['type_end'] != 'timeout']
+    return all_games_df
+
+
+def load_preprocessed_games(remove_timeout = True):
+    # Loads all games, removes the one before 2011, remove the ones with invalid article names, potentially remove timeouted
+    finished_df = load_finished_df()
+    unfinished_df = load_unfinished_df()
+    games = load_preprocessed_games(unfinished_df, finished_df)
+    articles_df = load_article_df()
+    games = prune_invalid_games(games, articles_df)
+    if remove_timeout:
+        games = prune_timeout_games(games)
+    return games
 
 
 def compute_cosine_similarity(all_games_df, embeddings_df):
