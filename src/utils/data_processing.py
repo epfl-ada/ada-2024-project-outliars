@@ -16,7 +16,7 @@ DEF_LINKS_PATH = "../data/paths-and-graph/links.tsv"
 DEF_FINISHED_PATH = "../data/paths-and-graph/paths_finished.tsv"
 DEF_UNFINISHED_PATH = "../data/paths-and-graph/paths_unfinished.tsv"
 
-DEF_EMBEDDINGS_PATH = "../data/article_embeddings_smaller.csv"
+DEF_EMBEDDINGS_PATH = "../src/data/article_embeddings_smaller.csv"
 DEF_UNIQUE_GAMES_PATH = "../data/paths-and-graph/unique_games.tsv"
 DEF_ADJ_LIST_PATH = "../data/paths-and-graph/adj_list.txt"
 DEF_PAIR_STATS_PATH = "../data/paths-and-graph/pair_data.tsv"

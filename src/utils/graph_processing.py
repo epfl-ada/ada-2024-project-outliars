@@ -133,7 +133,7 @@ def read_distance_matrix(file_path: str, articles_df: pd.DataFrame, skip_lines: 
     article_names = articles_df['article_name'].tolist()
     article_names = [unquote(x) for x in article_names] 
     
-    with open('data/paths-and-graph/shortest-path-distance-matrix.txt', 'r') as file:
+    with open('../data/paths-and-graph/shortest-path-distance-matrix.txt', 'r') as file:
         lines = file.readlines()
 
     # Skip metadata lines
