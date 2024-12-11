@@ -22,6 +22,9 @@ DEF_ADJ_LIST_PATH = "../data/paths-and-graph/adj_list.txt"
 DEF_PAIR_STATS_PATH = "../data/paths-and-graph/pair_data.tsv"
 DEF_NODE_STATS_PATH = "../data/paths-and-graph/node_data.tsv"
 
+DEF_LINK_PROB_PATH = "../src/data/link_probabilities.csv"
+DEF_FAME_PATH = "../src/data/topic_fame_updated.csv"
+
 EXECTABLE_NAME = 'graph_stats'
 
 
@@ -127,6 +130,30 @@ def load_embeddings(path: str = DEF_EMBEDDINGS_PATH):
     
     return embeddings_df
 
+def load_fame(path: str = DEF_FAME_PATH):
+    fame_df = pd.read_csv(path)
+    fame_df.drop(columns = ['decoded_article'], inplace = True)
+    fame_df['encoded_article'] = fame_df['encoded_article'].apply(unquote)
+    fame_df.rename(columns={"encoded_article": "article_name"}, inplace=True)
+
+    fame_df.index = fame_df['article_name']
+    fame_df.drop(columns=['article_name'], inplace=True)
+    fame_df.sort_index(inplace=True)
+    
+    return fame_df
+
+
+def load_link_proba(path: str = DEF_LINK_PROB_PATH):
+    link_proba_df = pd.read_csv(path)
+    link_proba_df.drop(columns = ['decoded_source', 'decoded_target'], inplace = True)
+    link_proba_df['encoded_source'] = link_proba_df['encoded_source'].apply(unquote)
+    link_proba_df['encoded_target'] = link_proba_df['encoded_target'].apply(unquote)
+    link_proba_df.rename(columns={"encoded_source": "article_source", "encoded_target": "article_target"}, inplace=True)
+    link_proba_df.set_index(['article_source', 'article_target'], inplace=True)
+    #print(link_proba_df.columns)
+    #link_proba_df.drop(columns = ['article_source', 'article_target'], inplace = True)
+    
+    return link_proba_df
 
 def preprocess_and_concat_unfinished_and_finished(unfinished_df, finished_df):
     # Keep only the games that happened after the first unfinished game
@@ -179,6 +206,7 @@ def prune_invalid_games(all_games_df, articles_df):
 def prune_timeout_games(all_games_df):
     # Remove games that ended with a timeout
     all_games_df = all_games_df[all_games_df['type_end'] != 'timeout']
+    print(f"After removing timeouted games, there are {len(all_games_df)} games left")
     return all_games_df
 
 
@@ -186,12 +214,12 @@ def load_preprocessed_games(remove_timeout = True):
     # Loads all games, removes the one before 2011, remove the ones with invalid article names, potentially remove timeouted
     finished_df = load_finished_df()
     unfinished_df = load_unfinished_df()
-    games = load_preprocessed_games(unfinished_df, finished_df)
+    gamess, _ = preprocess_and_concat_unfinished_and_finished(unfinished_df, finished_df)
     articles_df = load_article_df()
-    games = prune_invalid_games(games, articles_df)
+    new_games = prune_invalid_games(gamess, articles_df)
     if remove_timeout:
-        games = prune_timeout_games(games)
-    return games
+        neww_games = prune_timeout_games(new_games)
+    return neww_games
 
 
 def compute_cosine_similarity(all_games_df, embeddings_df):
@@ -212,28 +240,94 @@ def compute_cosine_similarity(all_games_df, embeddings_df):
     return all_games_df
     
     
-def merge_with_node_data(all_games_df, node_stats_df):
-    all_games_df = all_games_df.join(node_stats_df, on = 'source')
-    all_games_df = all_games_df.join(node_stats_df, on = 'target', rsuffix = '_target')
+def merge_with_node_data(all_games_df, node_stats_df, columns = ['source', 'target'], data = ['degree', 'closeness', 'betweenness', 'pagerank']):
+    all_games_df = all_games_df.copy()
+    for i in range(0, len(columns)):
+        all_games_df = all_games_df.join(node_stats_df[data], on = columns[i], rsuffix = '_'+columns[i])
+    
+    rename_dict = {}
 
-    all_games_df.rename(
-        columns = {
-            'degree': 'degree_source', 
-            'closeness': 'closeness_source', 
-            'betweenness': 'betweenness_source', 
-            'pagerank': 'pagerank_source'
-        }, 
-        inplace = True
+    for i in data:
+        rename_dict[i] = i + '_' + columns[0]
+
+    all_games_df = all_games_df.rename(
+        columns = rename_dict
     )
 
     num_games_before = len(all_games_df)
     # Drop games which do not have node statistics
-    all_games_df.dropna(subset = ['degree_source'], inplace = True)
-    all_games_df.dropna(subset = ['degree_target'], inplace = True)
+    matching_columns = [col for col in all_games_df.columns if any(col.startswith(prefix) for prefix in data)]
+    all_games_df.dropna(subset=matching_columns, inplace=True)
+    
     if len(all_games_df) < num_games_before:
         print(f"Dropped {num_games_before - len(all_games_df)} games without node statistics")
     
     return all_games_df
+
+
+def merge_with_fame_data(all_games_df, fame_df, columns = ['source', 'target']):
+    all_games_df = all_games_df.copy()
+    for i in range(0, len(columns)):
+        all_games_df = all_games_df.join(fame_df['fame_score'], on = columns[i], rsuffix = '_'+columns[i])
+
+    rename_dict = {}
+    rename_dict['fame_score'] = 'fame_score' + '_' + columns[0]
+
+    all_games_df = all_games_df.rename(
+        columns = rename_dict
+    )
+
+    num_games_before = len(all_games_df)
+    # Drop games which do not have fame statistics
+    matching_columns = [col for col in all_games_df.columns if col.startswith('fame_score')]
+    all_games_df.dropna(subset=matching_columns, inplace=True)
+    
+    if len(all_games_df) < num_games_before:
+        print(f"Dropped {num_games_before - len(all_games_df)} games without fame statistics")
+
+    return all_games_df
+
+def add_pair_data(all_games_df, pair_data, pairs = [['source', 'target']], names = [""], data = ['shortest_path_length', 'shortest_path_count', 'max_sp_node_degree',
+       'max_sp_avg_node_degree', 'avg_sp_avg_node_degree',
+       'one_longer_path_count', 'max_ol_node_degree', 'max_ol_avg_node_degree',
+       'avg_ol_avg_node_degree', 'two_longer_path_count', 'max_tl_node_degree',
+       'max_tl_avg_node_degree']):
+    if len(pairs) != len(names):
+        raise ValueError("Error: give a column name for each given pair !")
+    num_games_before = len(all_games_df)
+    c = []
+    for i, name in enumerate(names):
+        if len(pairs[i]) != 2:
+            raise ValueError(f"Each pair must contain exactly 2 column names. Invalid pair: {pair}")
+        for d in data:
+            all_games_df[d + "_" +name] = all_games_df.apply(lambda row: None if((row[pairs[i][0]] == '<') | (row[pairs[i][1]] == '<') | (not (row[pairs[i][0]], row[pairs[i][1]]) in pair_data.index)) else pair_data[d].loc[(row[pairs[i][0]], row[pairs[i][1]])] , axis = 1)
+        c.append(d+"_"+name)
+        
+    all_games_df.dropna(subset=c, inplace=True)
+    
+    if len(all_games_df) < num_games_before:
+        print(f"Dropped {num_games_before - len(all_games_df)} games without link statistics")
+
+    return all_games_df
+
+def add_link_proba_info(all_games_df, link_proba, pairs, names):
+    if len(pairs) != len(names):
+        raise ValueError("Error: give a column name for each given pair !")
+    num_games_before = len(all_games_df)
+    for i, name in enumerate(names):
+        if len(pairs[i]) != 2:
+            raise ValueError(f"Each pair must contain exactly 2 column names. Invalid pair: {pair}")
+        all_games_df[name] = all_games_df.apply(lambda row: None if((row[pairs[i][0]] == '<') | (row[pairs[i][1]] == '<')) else link_proba.loc[(row[pairs[i][0]], row[pairs[i][1]]), 'link_probability'] , axis = 1)
+        #all_games_df[name] = all_games_df.apply(
+        #        lambda row: print(row) or link_proba.loc[row[pairs[i][0]], row[pairs[i][1]]], axis=1
+        #    )
+    all_games_df.dropna(subset=names, inplace=True)
+    
+    if len(all_games_df) < num_games_before:
+        print(f"Dropped {num_games_before - len(all_games_df)} games without link statistics")
+
+    return all_games_df
+        
 
     
 def dump_unique_source_target_pairs(valid_games_df):
