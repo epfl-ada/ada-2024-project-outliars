@@ -300,7 +300,16 @@ def add_pair_data(all_games_df, pair_data, pairs = [['source', 'target']], names
         if len(pairs[i]) != 2:
             raise ValueError(f"Each pair must contain exactly 2 column names. Invalid pair: {pair}")
         for d in data:
-            all_games_df[d + "_" +name] = all_games_df.apply(lambda row: None if((row[pairs[i][0]] == '<') | (row[pairs[i][1]] == '<') | (not (row[pairs[i][0]], row[pairs[i][1]]) in pair_data.index)) else pair_data[d].loc[(row[pairs[i][0]], row[pairs[i][1]])] , axis = 1)
+            all_games_df[d + "_" + name] = all_games_df.apply(
+                    lambda row: (
+                        0 if ((row[pairs[i][0]] == '<') | (row[pairs[i][1]] == '<'))  # Check for '<' first
+                        else (
+                            None if ((row[pairs[i][0]], row[pairs[i][1]]) not in pair_data.index)  # Then check if tuple is in index
+                            else pair_data[d].loc[(row[pairs[i][0]], row[pairs[i][1]])]  # Otherwise, retrieve value from pair_data
+                        )
+                    ),
+                    axis=1
+                )
         c.append(d+"_"+name)
         
     all_games_df.dropna(subset=c, inplace=True)
@@ -317,7 +326,17 @@ def add_link_proba_info(all_games_df, link_proba, pairs, names):
     for i, name in enumerate(names):
         if len(pairs[i]) != 2:
             raise ValueError(f"Each pair must contain exactly 2 column names. Invalid pair: {pair}")
-        all_games_df[name] = all_games_df.apply(lambda row: None if((row[pairs[i][0]] == '<') | (row[pairs[i][1]] == '<')) else link_proba.loc[(row[pairs[i][0]], row[pairs[i][1]]), 'link_probability'] , axis = 1)
+        all_games_df[name] = all_games_df.apply(
+                        lambda row: (
+                            0 if ((row[pairs[i][0]] == '<') | (row[pairs[i][1]] == '<'))  # Check for '<' first
+                            else (
+                                None if ((row[pairs[i][0]], row[pairs[i][1]]) not in link_proba.index)  # Then check if tuple exists in index
+                                else link_proba.loc[(row[pairs[i][0]], row[pairs[i][1]]), 'link_probability']  # Retrieve value if valid
+                            )
+                        ),
+                        axis=1
+                    )
+
         #all_games_df[name] = all_games_df.apply(
         #        lambda row: print(row) or link_proba.loc[row[pairs[i][0]], row[pairs[i][1]]], axis=1
         #    )
