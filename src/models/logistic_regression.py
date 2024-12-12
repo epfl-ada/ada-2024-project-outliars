@@ -137,6 +137,8 @@ class LogisticRegression:
             self.has_constant = True
             X_train = sm.add_constant(X_train)
             X_test = sm.add_constant(X_test)
+
+        self.X_train, self.X_test, self.y_train, self.y_test = X_train, X_test, y_train, y_test
             
         self.model = sm.Logit(y_train, X_train).fit()
         self.threshold = self.determine_best_thresh(X_train, y_train)
@@ -157,6 +159,9 @@ class LogisticRegression:
             scaled_X = sm.add_constant(scaled_X)
         
         return self.model.predict(scaled_X) > threshold
+
+    def return_train_test(self):
+        return self.X_train, self.X_test, self.y_train, self.y_test
     
     def predict_proba(self, X: pd.DataFrame):
         self._check_input(X)

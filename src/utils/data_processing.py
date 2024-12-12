@@ -222,21 +222,26 @@ def load_preprocessed_games(remove_timeout = True):
     return neww_games
 
 
-def compute_cosine_similarity(all_games_df, embeddings_df):
-    all_games_df = all_games_df.join(embeddings_df, on = 'source')
-    all_games_df.rename(columns = {'embedding': 'embedding_source'}, inplace = True)
-
-    all_games_df = all_games_df.join(embeddings_df, on = 'target')
-    all_games_df.rename(columns = {'embedding': 'embedding_target'}, inplace = True)
-
-    # Embeddings are normalized so so a dot product is a cosine similarity
-    all_games_df['cosine_similarity'] = all_games_df.apply(
-        lambda x: np.dot(x['embedding_source'], x['embedding_target']),
-        axis=1
-    )
+def compute_cosine_similarity(all_games_df, embeddings_df, pairs = [['source', 'target']]):
+    for pair in pairs:
+        col1, col2 = pair[0], pair[1]
     
-    all_games_df.drop(columns=['embedding_source', 'embedding_target'], inplace=True)
+        all_games_df = all_games_df.join(embeddings_df, on=col1)
+        all_games_df.rename(columns={'embedding': f'embedding_{col1}'}, inplace=True)
     
+        all_games_df = all_games_df.join(embeddings_df, on=col2)
+        all_games_df.rename(columns={'embedding': f'embedding_{col2}'}, inplace=True)
+    
+        sim_column_name = f'cosine_sim_{col1}_{col2}'
+        all_games_df[sim_column_name] = all_games_df.apply(
+            lambda x: np.dot(x[f'embedding_{col1}'], x[f'embedding_{col2}']),
+            axis=1
+        )
+    
+        # Drop the temporary embedding columns for this pair
+        all_games_df.drop(columns=[f'embedding_{col1}', f'embedding_{col2}'], inplace=True)
+
+
     return all_games_df
     
     
