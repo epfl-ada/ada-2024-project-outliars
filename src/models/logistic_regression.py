@@ -56,6 +56,9 @@ class LogisticRegression:
         # Randomly sample from the majority class to match the minority class size
         majority_sampled = majority_class.sample(n=len(minority_class), random_state=42)
 
+        # Save the unused portion of the majority class
+        self.unused = majority_class.drop(majority_sampled.index)
+        
         # Combine the resampled majority class with the original minority class
         balanced_games = pd.concat([majority_sampled, minority_class])
 
