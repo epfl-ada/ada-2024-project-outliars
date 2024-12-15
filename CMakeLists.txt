@@ -38,17 +38,17 @@ endif()
 
 # Print the flags that are used in the current configuration
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
-message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
-message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
 
 # Print the mode that is used in the current configuration
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Configuring for Debug mode")
+    message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     message(STATUS "Configuring for Release mode")
+    message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
 else()
     message(WARNING "Unknown build type")
 endif()
 
 
-add_executable(graph_stats src/graph_stats.cxx)
+add_executable(graph_stats src/scripts/graph_stats.cxx)

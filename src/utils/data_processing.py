@@ -67,15 +67,34 @@ def load_links_df(path: str = DEF_LINKS_PATH, articles_df = None):
 
     # Decode article names
     links_df = links_df.map(unquote)
+    
+    # Print how many were loaded from the file
+    print(f"Loaded {len(links_df)} links in df of shape {links_df.shape}")
 
-    ''' odavde uncomment
-    for pair in [('Finland', 'Åland'), ('Republic_of_Ireland', 'Éire'), ('Claude_Monet', 'Édouard_Manet'), ('Impressionism', 'Édouard_Manet'), ('Ireland', 'Éire'), ('Francisco_Goya', 'Édouard_Manet')]:
-        links_df = pd.concat([links_df, pd.DataFrame({"source": pair[0], "target": pair[1]})], ignore_index = True)
+    # Create a dataframe with the links that are not in the articles dataframe
+    missing_links = [
+        ('Finland', 'Åland'), 
+        ('Republic_of_Ireland', 'Éire'), 
+        ('Claude_Monet', 'Édouard_Manet'), 
+        ('Impressionism', 'Édouard_Manet'), 
+        ('Ireland', 'Éire'), 
+        ('Francisco_Goya', 'Édouard_Manet')
+    ]
 
-    if articles_df != None:
-        for index, row in articles_df.iterrows():
-            links_df = pd.concat([links_df, pd.DataFrame({"source": row['article_name'], "target": 'Wikipedia_Text_of_the_GNU_Free_Documentation_License'})], ignore_index = True)
-    '''
+    missing_links_df = pd.DataFrame(missing_links, columns = ['source', 'target'])
+    
+    # Concatenate the missing links with the existing links
+    links_df = pd.concat([links_df, missing_links_df], ignore_index = True)
+    
+    # Create a df that contains the links to license information for every article if the articles_df is given
+    if articles_df is not None:
+        license_links_df = pd.DataFrame(columns = ['source', 'target'])
+        license_links_df['source'] = articles_df['article_name']
+        license_links_df['target'] = 'Wikipedia_Text_of_the_GNU_Free_Documentation_License'
+        
+        links_df = pd.concat([links_df, license_links_df], ignore_index = True)
+
+    print(f"After adding missing links, there are {len(links_df)} links in df")
     return links_df
 
 

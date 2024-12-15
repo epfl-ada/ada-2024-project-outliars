@@ -207,7 +207,7 @@ def export_graph_to_indexed_format(adj_list: dict, output_file: str):
     node_to_id = generate_index_mapping(adj_list)
     
     # Step 2: Write the index mapping and adjacency lists to the output file
-    with open(output_file, 'w') as f:
+    with open(output_file, 'w', encoding='utf-8') as f:
         # Write the index mapping
         f.write('# Node Index Mapping\n')
         for node, idx in node_to_id.items():
