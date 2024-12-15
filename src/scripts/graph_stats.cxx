@@ -812,10 +812,10 @@ public:
 int main() {
     try {
         omp_set_num_threads(16);
-        const Graph graph = Graph::load_graph_from_file("../../data/paths-and-graph/adj_list.txt");
+        const Graph graph = Graph::load_graph_from_file("../data/paths-and-graph/adj_list.txt");
         std::cout << "Loaded graph with " << graph.get_num_nodes() << " nodes\n";
 
-        const auto pairs = graph.load_pairs_from_file("../../data/paths-and-graph/unique_games.tsv");
+        const auto pairs = graph.load_pairs_from_file("../data/paths-and-graph/unique_games.tsv");
         std::cout << "Loaded " << pairs.size() << " pairs to compute statistics for\n";
 
         // Add timing here
@@ -827,7 +827,7 @@ int main() {
         const std::chrono::duration<double> elapsed_seconds = end - start;
         std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
 
-        graph.dump_pair_stats_to_file("../../data/paths-and-graph/pair_data.tsv", pair_statistics);
+        graph.dump_pair_stats_to_file("../data/paths-and-graph/pair_data.tsv", pair_statistics);
 
         constexpr uint16_t max_print_value = 30;
 
@@ -852,7 +852,7 @@ int main() {
             node_data.push_back(data);
         }
 
-        dump_node_data_to_file("../../data/paths-and-graph/node_data.tsv", node_data);
+        dump_node_data_to_file("../data/paths-and-graph/node_data.tsv", node_data);
 
         // Draw some random samples for the pairs and display the results
         for (uint16_t i = 0; i < max_print_value; ++i) {
