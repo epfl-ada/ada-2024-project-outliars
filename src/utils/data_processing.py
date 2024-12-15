@@ -208,22 +208,22 @@ def remove_games_with_not_existing_link(games_df, links_df):
 def remove_unexisting_link(games_df):
     # after analysis, we saw that all games have a link to 'Wikipedia_Text_of_the_GNU_Free_Documentation_License' but this leads to nowhere so we should remove such games, as well as games containing non existing links
     len1 = games_df.shape[0]
-    invalid_pairs = 0
+    
     def check_consecutive_links(path):
         for i in range(len(path) - 1):
             source, target = path[i], path[i + 1]
             if (source == '<') or (target == '<'):
                 continue
             if (source, target) in [('Finland', 'Åland'), ('Republic_of_Ireland', 'Éire'), ('Claude_Monet', 'Édouard_Manet'), ('Impressionism', 'Édouard_Manet'), ('Ireland', 'Éire'), ('Francisco_Goya', 'Édouard_Manet')]:
-                invalid_pairs += 1
+                
                 return False 
             if (source == 'Wikipedia_Text_of_the_GNU_Free_Documentation_License') or (target == 'Wikipedia_Text_of_the_GNU_Free_Documentation_License'):
-                invalid_pairs += 1
+                
                 return False
         return True  # All pairs are valid
     games_df = games_df[games_df['path'].apply(lambda x: check_consecutive_links(x))]
-    if len(invalid_pairs) > 0:
-            print(f"Removed {len1 - len(invalid_pairs)} games that contained non existing links")
+    if (len(games_df) < len1) > 0:
+            print(f"Removed {len1 - len(games_df)} games that contained non existing links")
     return games_df
     
 

@@ -33,16 +33,21 @@ class LogisticRegression:
             data: pd.DataFrame, 
             features: List[str],
             target_feature: str = 'finished',
-            has_constant_term: bool = False
+            has_constant_term: bool = False,
+            track_click: bool = False
     ):
         self.data = data.copy()
         self.features = features
         self.target_feature = target_feature
+        self.track_click = track_click
         
         self.scaler: StandardScaler = StandardScaler()
         self.has_constant: bool = has_constant_term
         self.threshold: float = 0.5
         self.model: sm.Logit = None
+        self.n_train = None
+        self.n_test = None
+        
         
         
     def balance_data(self):
@@ -125,16 +130,27 @@ class LogisticRegression:
         if balance_data:
             self.balance_data()
         
-        X_train, X_test, y_train, y_test, n_train, n_test = train_test_split(
+        if self.track_click == True:
+            X_train, X_test, y_train, y_test, n_train, n_test = train_test_split(
             self.data[self.features], 
             self.data[self.target_feature], 
             self.data['n'],
             train_size=train_size,
             random_state=random_state,
             stratify=self.data[self.target_feature]
-        )
+            )
+            self.n_train, self.n_test = n_train.copy(), n_test.copy()
+        else:
+            X_train, X_test, y_train, y_test = train_test_split(
+            self.data[self.features], 
+            self.data[self.target_feature], 
+            train_size=train_size,
+            random_state=random_state,
+            stratify=self.data[self.target_feature]
+            )
+            
 
-        self.X_train, self.X_test, self.y_train, self.y_test, self.n_train, self.n_test = X_train.copy(), X_test.copy(), y_train.copy(), y_test.copy(), n_train.copy(), n_test.copy()
+        self.X_train, self.X_test, self.y_train, self.y_test = X_train.copy(), X_test.copy(), y_train.copy(), y_test.copy(), 
         
         X_train = self.scaler.fit_transform(X_train)
         X_test = self.scaler.transform(X_test)
