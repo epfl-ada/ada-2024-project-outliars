@@ -61,15 +61,21 @@ def load_categories_df(path: str = DEF_CATEGORIES_PATH):
     return categories_df
 
 
-def load_links_df(path: str = DEF_LINKS_PATH):
+def load_links_df(path: str = DEF_LINKS_PATH, articles_df = None):
     links_df = pd.read_csv(path, sep = "\t", comment = '#', header = None)
     links_df.columns = ['source', 'target']
 
     # Decode article names
     links_df = links_df.map(unquote)
-    
-    print(f"Loaded {len(links_df)} links in df of shape {links_df.shape}")
-    
+
+    ''' odavde uncomment
+    for pair in [('Finland', 'Åland'), ('Republic_of_Ireland', 'Éire'), ('Claude_Monet', 'Édouard_Manet'), ('Impressionism', 'Édouard_Manet'), ('Ireland', 'Éire'), ('Francisco_Goya', 'Édouard_Manet')]:
+        links_df = pd.concat([links_df, pd.DataFrame({"source": pair[0], "target": pair[1]})], ignore_index = True)
+
+    if articles_df != None:
+        for index, row in articles_df.iterrows():
+            links_df = pd.concat([links_df, pd.DataFrame({"source": row['article_name'], "target": 'Wikipedia_Text_of_the_GNU_Free_Documentation_License'})], ignore_index = True)
+    '''
     return links_df
 
 
@@ -163,6 +169,46 @@ def load_link_proba(path: str = DEF_LINK_PROB_PATH):
     
     return link_proba_df
 
+def remove_games_with_not_existing_link(games_df, links_df):
+    len1 = games_df.shape[0]
+    invalid_pairs = []
+    def check_consecutive_links(path):
+        for i in range(len(path) - 1):
+            source, target = path[i], path[i + 1]
+            if (source == '<') or (target == '<'):
+                continue
+            if not ((links_df['source'] == source) & (links_df['target'] == target)).any():
+                invalid_pairs.append((source, target))
+                return False 
+        return True  # All pairs are valid
+    games_df = games_df[games_df['path'].apply(lambda x: check_consecutive_links(x, links_df))]
+    if len(invalid_pairs) > 0:
+            print(f"Removed {len1 - len(invalid_pairs)} games that contained non existing links, such as: {invalid_pairs}")
+    return games_df
+
+def remove_unexisting_link(games_df):
+    # after analysis, we saw that all games have a link to 'Wikipedia_Text_of_the_GNU_Free_Documentation_License' but this leads to nowhere so we should remove such games, as well as games containing non existing links
+    len1 = games_df.shape[0]
+    invalid_pairs = 0
+    def check_consecutive_links(path):
+        for i in range(len(path) - 1):
+            source, target = path[i], path[i + 1]
+            if (source == '<') or (target == '<'):
+                continue
+            if (source, target) in [('Finland', 'Åland'), ('Republic_of_Ireland', 'Éire'), ('Claude_Monet', 'Édouard_Manet'), ('Impressionism', 'Édouard_Manet'), ('Ireland', 'Éire'), ('Francisco_Goya', 'Édouard_Manet')]:
+                invalid_pairs += 1
+                return False 
+            if (source == 'Wikipedia_Text_of_the_GNU_Free_Documentation_License') or (target == 'Wikipedia_Text_of_the_GNU_Free_Documentation_License'):
+                invalid_pairs += 1
+                return False
+        return True  # All pairs are valid
+    games_df = games_df[games_df['path'].apply(lambda x: check_consecutive_links(x))]
+    if len(invalid_pairs) > 0:
+            print(f"Removed {len1 - len(invalid_pairs)} games that contained non existing links")
+    return games_df
+    
+
+
 def preprocess_and_concat_unfinished_and_finished(unfinished_df, finished_df):
     # Keep only the games that happened after the first unfinished game
     finished_mod = finished_df.copy()
@@ -225,6 +271,7 @@ def load_preprocessed_games(remove_timeout = True):
     gamess, _ = preprocess_and_concat_unfinished_and_finished(unfinished_df, finished_df)
     articles_df = load_article_df()
     new_games = prune_invalid_games(gamess, articles_df)
+    new_games = remove_unexisting_link(new_games)
     if remove_timeout:
         neww_games = prune_timeout_games(new_games)
     return neww_games

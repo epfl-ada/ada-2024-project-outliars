@@ -125,13 +125,16 @@ class LogisticRegression:
         if balance_data:
             self.balance_data()
         
-        X_train, X_test, y_train, y_test = train_test_split(
+        X_train, X_test, y_train, y_test, n_train, n_test = train_test_split(
             self.data[self.features], 
             self.data[self.target_feature], 
+            self.data['n'],
             train_size=train_size,
             random_state=random_state,
             stratify=self.data[self.target_feature]
         )
+
+        self.X_train, self.X_test, self.y_train, self.y_test, self.n_train, self.n_test = X_train.copy(), X_test.copy(), y_train.copy(), y_test.copy(), n_train.copy(), n_test.copy()
         
         X_train = self.scaler.fit_transform(X_train)
         X_test = self.scaler.transform(X_test)
@@ -141,7 +144,7 @@ class LogisticRegression:
             X_train = sm.add_constant(X_train)
             X_test = sm.add_constant(X_test)
 
-        self.X_train, self.X_test, self.y_train, self.y_test = X_train, X_test, y_train, y_test
+        
             
         self.model = sm.Logit(y_train, X_train).fit()
         self.threshold = self.determine_best_thresh(X_train, y_train)
