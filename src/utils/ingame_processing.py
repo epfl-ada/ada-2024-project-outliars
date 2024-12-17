@@ -173,7 +173,9 @@ def create_from_dataset(datagames, whole_dataset, minn, maxx, filter = True, bal
 # from starting dataset, sample num_samples won and lost games, use other games to create train dataset, create test dataset for won and for lost games
 # create datasets using first n_min clicks
 # filter out games using max path and min path arguments
-def create_dataset_and_samples(n_min, start_dataset, num_samples, max_path_length = None, min_path_length = None, special_for_each = False, node_stats_df = None, embeddings_df = None, pair_data = None, max_train_set = n_min):
+def create_dataset_and_samples(n_min, start_dataset, num_samples, max_path_length = None, min_path_length = None, special_for_each = False, node_stats_df = None, embeddings_df = None, pair_data = None, max_train_set = None):
+    if max_train_set is None:
+        max_train_set = n_min
     dataset = start_dataset.copy()
     if max_path_length is not None:
         if min_path_length is not None:
@@ -204,7 +206,7 @@ def create_dataset_and_samples(n_min, start_dataset, num_samples, max_path_lengt
 
 
 # generate predictions from test sets and calculate accuracy using one model (trained on whole dataset) or models (one for each specific dataset)
-def joint_predict_and_print(true_games, false_games, num_samples, n_min, threshold, models, true_one, false_one, model_1, graphs = False, special_for_each = False):
+def joint_predict_and_print(true_games, false_games, num_samples, n_min, threshold, model, true_one, false_one, model_1, graphs = False, special_for_each = False):
     y_pred_true = model_1.predict_proba(true_one.drop(columns = ['finished', 'n']))
     y_pred_false = model_1.predict_proba(false_one.drop(columns = ['finished', 'n']))
     true_games_stats = (y_pred_true > threshold).astype(int)
@@ -232,12 +234,12 @@ def joint_predict_and_print(true_games, false_games, num_samples, n_min, thresho
 
        
     else:
-        num_models = len(models)  
+        num_models = len(model)  
         
         y_pred_true_list = []
         y_pred_false_list = []
         
-        for i, model in enumerate(models):
+        for i, model in enumerate(model):
             true_chunk = true_games[i]
             false_chunk = false_games[i]
             
@@ -280,5 +282,333 @@ def joint_predict_and_print(true_games, false_games, num_samples, n_min, thresho
         print(f"Accuracy at click {idx+2}: {acc:.4f}")
 
     return np.concatenate((temp_true, y_pred_true)), np.concatenate((temp_false, y_pred_false))
+
+
+def build_inherent_dataset(data):
+    data_inh = data[data['n'] == 2]
+    data_inh = data_inh[['pagerank_target', 'finished']]
+    features_inh = ['pagerank_target']
+    return data_inh, features_inh
+
+def predict_inh_for_true_false(true_games, false_games, model_inh):
+    true_games_inh = true_games[true_games['n'] == 2][['pagerank_target']]
+    false_games_inh = false_games[false_games['n'] == 2][['pagerank_target']]
+    pred_inh_true = model_inh.predict_proba(true_games_inh)
+    pred_inh_false = model_inh.predict_proba(false_games_inh)
+    return pred_inh_true, pred_inh_false
+
+def gen_final_from_inh_clicks(true_pred, false_pred, n_min, pred_inh_true, pred_inh_false):
+    x_true = len(pred_inh_true)
+    x_false = len(pred_inh_false)
+    true_pred_reshaped = true_pred.reshape(6, x_true).T  # Shape (x, 6)
+    final_true_pred = np.insert(true_pred_reshaped, 0, pred_inh_true, axis=1)
+    false_pred_reshaped = false_pred.reshape(6, x_false).T  # Shape (x, 6)
+    final_false_pred = np.insert(false_pred_reshaped, 0, pred_inh_false, axis=1)
+    return final_true_pred, final_false_pred
+
+def plot_mean_of_games(final_true_pred, final_false_pred):
+    mean_true_pred = np.mean(final_true_pred, axis=0)
+    mean_false_pred = np.mean(final_false_pred, axis=0)
+    
+    plt.figure(figsize=(10, 6))
+    plt.plot(mean_true_pred, label="True Array (Mean)", linestyle='-', marker='o', color='green')
+    plt.plot(mean_false_pred, label="False Array (Mean)", linestyle='--', marker='x', color='red')
+    
+    plt.xlabel("Columns")
+    plt.ylabel("Average Values")
+    plt.title("Mean of Predictions for True and False Arrays")
+    plt.legend(loc='upper right', bbox_to_anchor=(1.3, 1))  # Adjust legend position
+    plt.grid(True)
+    
+    plt.tight_layout()
+    plt.show()
+
+
+def assign_labels(array, is_true=True, oneForAll = True):
+    labels = []  
+    if oneForAll == False:
+        truths = is_true.copy()
+    
+    for i in range(len(array)):
+        if oneForAll == False:
+            is_true = truths[i]
+        row = array[i]
+        if is_true: # won games
+            if np.max(row) - np.min(row) <= 0.3:
+                labels.append(1)
+            elif row[0] < 0.45 and np.mean(np.diff(row)) > 0:
+                labels.append(2)
+            elif np.mean(np.diff(row)) > 0:
+                labels.append(3)
+            else:
+                labels.append(4)
+            
+        else: # lost games
+            if np.max(row) - np.min(row) <= 0.3:
+                labels.append(1)
+            elif row[0] > 0.45 and np.mean(np.diff(row)) < 0:
+                labels.append(2)
+            elif np.mean(np.diff(row)) < 0:
+                labels.append(3)
+            else:
+                labels.append(4)
+    
+    return np.array(labels)
+
+
+def plot_average_for_labels(array, labels, is_true=True):
+    if is_true:
+        label_names = {1: "Stationary start Win", 2: "Clutch Win", 3: "Good start Win", 4: "How did you win this?"}
+        color = "green"
+    else:
+        label_names = {1: "Stationary start Loss", 2: "Unexpected Loss", 3: "Bad start Loss", 4: "How did you lose this?"}
+        color = "red"
+
+    for label in [1, 2, 3, 4]:
+        label_indices = np.where(labels == label)[0]
+        
+        # Calculate the average for each label
+        if len(label_indices) > 0:
+            avg_array = np.mean(array[label_indices], axis=0)
+            
+            plt.figure(figsize=(10, 6))
+            plt.plot(avg_array, marker='o', label=f"Average for {label_names[label]}", color=color)
+            
+            plt.title(f"Average of All Games for Label {label} ({label_names[label]})")
+            plt.xlabel("Columns")
+            plt.ylabel("Values")
+            plt.legend(loc='upper right')
+            plt.grid(True)
+            plt.tight_layout()
+            plt.show()
+
+
+
+def plot_random_games_for_labels(array, labels, is_true=True):
+    if is_true:
+        label_names = {1: "Stationary start Win", 2: "Clutch Win", 3: "Good start Win", 4: "How did you win this?"}
+        color = "green"
+    else:
+        label_names = {1: "Stationary start Loss", 2: "Unexpected Loss", 3: "Bad start Loss", 4: "How did you lose this?"}
+        color = "red"
+
+    for label in [1, 2, 3, 4]:  # Now including label 4
+        label_indices = np.where(labels == label)[0]
+        
+        # Randomly select 3 indices for this label
+        if len(label_indices) > 0:
+            random_indices = np.random.choice(label_indices, size=min(3, len(label_indices)), replace=False)
+
+            for i, idx in enumerate(random_indices):
+                plt.figure(figsize=(10, 6))
+                plt.plot(array[idx], marker='o', label=f"Game {i+1}", color=color)
+                
+                plt.title(f"Random Game {i+1} for Label {label} ({label_names[label]})")
+                plt.xlabel("Columns")
+                plt.ylabel("Values")
+                plt.legend(loc='upper right')
+                plt.grid(True)
+                plt.tight_layout()
+                plt.show()
+
+
+def check_overlaps(group):
+    group = group.copy()
+    group["overlap"] = (
+        group["timestamp"] < group["timestamp"].shift(1) + pd.to_timedelta(group["duration"].shift(1), unit="s")
+    )
+    return group
+    
+def get_non_overlapping_games(games):
+    overlap = games.copy().sort_values(by=["hashIP", "timestamp"]).reset_index(drop=True)
+    overlap = overlap.groupby("hashIP", group_keys=False).apply(check_overlaps)
+    players_with_overlaps = overlap.loc[overlap["overlap"], "hashIP"].unique()
+    all_games_with_overlaps = overlap[overlap["hashIP"].isin(players_with_overlaps)]
+    columns_to_display = ["hashIP", "path", "finished", "timestamp", "duration", "type_end", "overlap"]
+    non_overlap_rows = games.copy()[~games["hashIP"].isin(players_with_overlaps)]
+    
+    # for rows where hashIP IS in players_with_overlaps, keep only the row with the smallest timestamp
+    overlap_rows = (
+        games.copy()[games["hashIP"].isin(players_with_overlaps)]
+        .sort_values(by=["hashIP", "timestamp"])
+        .groupby("hashIP", group_keys=False)
+        .head(1)
+    )
+    
+    filtered_games = pd.concat([non_overlap_rows, overlap_rows]).sort_index()
+    filtered_games = filtered_games.reset_index(drop=True)
+    return filtered_games
+
+# we assume games are filtered by timestamp
+def calculate_elos_for_player(games_clicks, labels, win, K= 30):
+    """
+    Calculate Elo ratings for a player based on their game performance.
+    
+    Parameters:
+    - games_clicks: 2D numpy array (each row represents a game, first column is inherent difficulty)
+    - labels: 1D numpy array of game labels (1 to 4)
+    - win: 1D numpy array indicating if the game was won (1) or lost (0)
+    - K: Constant controlling the magnitude of Elo adjustments
+    
+    Returns:
+    - elos: 1D numpy array of player's Elo after each game
+    """
+    num_games = len(games_clicks)
+    elos = np.zeros(num_games+1)  
+    player_rating = 1000  # initial player rating
+    elos[0] = 1000
+    score_game = []
+    
+    for i in range(num_games):
+        # Calculate game score
+        inherent_difficulty = games_clicks[i, 0] 
+        game_score = 1000 + inherent_difficulty * 2000  # game rating
+        score_game.append(int(game_score))
+
+        expected_performance = 1 / (1 + 10 ** ((game_score - player_rating) / 400))
+      
+        if win[i] == 1:  # Game was won
+            if labels[i] == 1:  # Stationary start win
+                actual_performance = 0.6
+            elif labels[i] == 2:  # Clutch win
+                actual_performance = 1
+            elif labels[i] == 3:  # Good start win
+                actual_performance = 0.8
+            elif labels[i] == 4:  # How did you win this
+                actual_performance = 0.5
+            else:
+                print(labels[i])
+        else:  # Game was lost
+            if labels[i] == 1:  # Stationary game loss
+                actual_performance = -0.1
+            elif labels[i] == 2:  # Unexpected loss
+                actual_performance = -1
+            elif labels[i] == 3:  # Bad start loss
+                actual_performance = -0.5
+            elif labels[i] == 4:  # How did you lose this
+                actual_performance = -0.3
+            else:
+                print(labels[i])
+        
+        new_rating = player_rating + K * (actual_performance - expected_performance)
+        elos[i+1] = int(new_rating)
+        
+        player_rating = new_rating
+    
+    return elos, score_game
+
+
+# send new games !
+def build_dataset_for_players(train_dataset, filtered_dataset, player_ips, n_min = 4, node_stats_df = None, embeddings_df = None, pair_data = None):
+    player_datasets = []
+    for h in player_ips:
+        player_datasets.append(filtered_dataset.copy()[(filtered_dataset['path_length'] > 5) & (filtered_dataset['hashIP'] == h)])
+    train_dataset = train_dataset.copy()[~train_dataset['hashIP'].isin(player_ips)]
+    new_dataset, one_dataset = create_from_dataset(train_dataset, None, 1, n_min, node_stats_df = node_stats_df, embeddings_df = embeddings_df, pair_data = pair_data)
+    player_games_sets, player_one_sets = [], []
+    for d in player_datasets:
+        pg, pgo = create_from_dataset(d, None, 1, n_min, balanced = True, node_stats_df = node_stats_df, embeddings_df = embeddings_df, pair_data = pair_data)
+        player_games_sets.append(pg)
+        player_one_sets.append(pgo)
+    return new_dataset, one_dataset, player_games_sets, player_one_sets
+
+
+def calc_clicks_and_labels(model_inh, model_1, model, player_games_sets, player_one_sets):
+    clicks = []
+    labels = []
+    wins = []
+
+    for i in range(len(player_games_sets)):
+        proba_2 = model.predict_proba(player_games_sets[i].drop(columns = ['finished', 'n']))
+        proba_1 = model_1.predict_proba(player_one_sets[i].drop(columns = ['finished', 'n']))
+        inh_d = player_games_sets[i][player_games_sets[i]['n'] == 2]
+        proba_0 = model_inh.predict_proba(inh_d[['pagerank_target']])
+        #print(player_games_sets[i]['n'].max())
+        num_clicks = int(player_games_sets[i]['n'].max())
+        #print(num_clicks)
+        num_games = player_games_sets[i].shape[0] // (num_clicks-1)
+        #print(num_games)
+        
+        proba_2_reshaped = proba_2.reshape(num_games, num_clicks - 1)
+        result = np.hstack([
+            proba_0.reshape(-1, 1), 
+            proba_1.reshape(-1, 1),  
+            proba_2_reshaped         
+        ])
+        clicks.append(result)
+
+        won = player_games_sets[i][player_games_sets[i]['n'] == 2]['finished'].values
+        labels.append(assign_labels(result, is_true=won, oneForAll = False)) 
+        wins.append(won)
+
+    return clicks, labels, wins
+    
+
+def plot_player_games(clicks, wins, elos=None):
+    """
+    Plots games for each player. When Elo ratings are provided, plots each game separately 
+    with Elo ratings and game scores included in the plot titles.
+    
+    Args:
+        clicks (list of 2D arrays): Each element is a 2D array where rows represent games for a player.
+        wins (list of 1D arrays): Each element is a 1D binary array indicating win (1) or loss (0) for each game.
+        elos (list of tuples, optional): If provided, each element is a tuple (player_elos, game_scores).
+            - player_elos: 1D array of the player's Elo scores before each game.
+            - game_scores: 1D array of the game scores (Elo of the game) for each game.
+    """
+    num_players = len(clicks)
+
+    for player_idx in range(num_players):
+        player_games = clicks[player_idx]  # 2D array: rows are games
+        player_wins = wins[player_idx]     # 1D array: 1 = win, 0 = loss
+        
+        if elos is None:
+            # Plot all games on one graph for this player
+            plt.figure(figsize=(10, 6))
+            for game_idx, game in enumerate(player_games):
+                if player_wins[game_idx] == 1:  # Won game
+                    plt.plot(game, marker='o', color='green', label='Win' if game_idx == 0 else "")  # Add label only once
+                else:  # Lost game
+                    plt.plot(game, marker='o', color='red', label='Loss' if game_idx == 0 else "")  # Add label only once
+            
+            plt.title(f"Player {player_idx + 1}: Games")
+            plt.xlabel("Clicks")
+            plt.ylabel("Values")
+            plt.legend(loc='upper right')
+            plt.grid(True)
+            plt.tight_layout()
+            plt.show()
+        else:
+            # Plot each game separately with Elo ratings
+            player_elos, game_scores = elos[player_idx]  # Tuple of 1D arrays
+            num_games = len(player_games)
+            
+            for game_idx, game in enumerate(player_games):
+                plt.figure(figsize=(10, 6))
+                
+                # Color game based on win/loss
+                color = 'green' if player_wins[game_idx] == 1 else 'red'
+                plt.plot(game, marker='o', color=color)
+                
+                # Elo ratings and game score for the current game
+                elo_before = player_elos[game_idx]
+                elo_after = player_elos[game_idx + 1] if game_idx + 1 < len(player_elos) else "N/A"
+                game_score = game_scores[game_idx]
+                
+                # Add title with Elo and game score
+                plt.title(
+                    f"Player {player_idx + 1}: Game {game_idx + 1}\n"
+                    f"Elo Before: {elo_before}, Elo After: {elo_after}\n"
+                    f"Game Score: {game_score}"
+                )
+                
+                plt.xlabel("Clicks")
+                plt.ylabel("Values")
+                plt.grid(True)
+                plt.tight_layout()
+                plt.show()
+
+        
+
 
     
