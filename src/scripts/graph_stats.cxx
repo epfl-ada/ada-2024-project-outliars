@@ -541,14 +541,14 @@ public:
                 }
             }
 
-            temp_average_pagerank = path_pagerank / static_cast<float>(path.size());
+            temp_average_pagerank = path_pagerank / static_cast<float>(path.size() - 1);
 
             if (temp_average_pagerank > max_average_path_pagerank) {
                 max_average_path_pagerank = temp_average_pagerank;
             }
         }
 
-        total_paths_pagerank /= static_cast<float>(paths.size() * paths[0].size());
+        total_paths_pagerank /= static_cast<float>(paths.size() * (paths[0].size() - 1));
 
         return {max_path_pagerank, max_average_path_pagerank, total_paths_pagerank};
     }
