@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from utils.data_processing import *
 from utils.graph_processing import *
+from matplotlib import pyplot as plt
 
 # builds dataset from given dataset starting_games with features for predicting outcome based on first click, uses all games not won in 1 click or less
 def build_dataset_for_first(starting_games, node_stats_df = None, embeddings_df = None, pair_data = None):
