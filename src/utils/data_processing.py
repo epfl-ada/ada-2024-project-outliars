@@ -429,7 +429,20 @@ def add_link_proba_info(all_games_df, link_proba, pairs, names):
 
     
 def dump_unique_source_target_pairs(valid_games_df):
-    unique_games = valid_games_df[['source', 'target']].drop_duplicates()
+    #Extract all pairs of all paths that appear in the dataset
+    unique_games = set()
+    for path, target in zip(valid_games_df['path'], valid_games_df['target']):
+        for i in range(len(path) - 1):
+            source = path[i]
+            
+            if source != '<':
+                unique_games.add((source, target))
+            
+    unique_games = pd.DataFrame(list(unique_games), columns = ['source', 'target'])
+            
+    # Drop duplicates
+    unique_games.drop_duplicates(inplace = True)
+    
     unique_games.to_csv('../data/paths-and-graph/unique_games.tsv', sep = '\t', index = False, header = False)
     
     print(f"Dumped {len(unique_games)} unique source-target pairs")
