@@ -193,13 +193,13 @@ def load_fame(path: str = DEF_FAME_PATH):
     
     return fame_df
 
-def load_pair_data():
-    articles_df = load_article_df()
-    links_df = load_links_df()
+def load_pair_data(path1 = '../data/paths-and-graph/articles.tsv', path2 = '../data/paths-and-graph/links.tsv', path3 = '../src/data/pair_stats.txt'):
+    articles_df = load_article_df(path1)
+    links_df = load_links_df(path2)
     adj_matrix = construct_adjecency_matrix(links_df, articles_df['article_name'].tolist())
     adj_list = from_adjacency_matrix_to_list(adj_matrix)
     index_mapping = generate_inverse_index_mapping(adj_list)
-    pair_data = load_pair_data_with_multiindex('../src/data/pair_stats.txt', index_mapping)
+    pair_data = load_pair_data_with_multiindex(path3, index_mapping)
     return pair_data
 
 def load_link_proba(path: str = DEF_LINK_PROB_PATH):

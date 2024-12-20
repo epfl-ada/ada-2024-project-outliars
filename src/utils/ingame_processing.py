@@ -46,8 +46,8 @@ def build_dataset(starting_games, n, ind = None, node_stats_df = None, embedding
     starting_games['duration'] = (n/(starting_games['path_length']-1))* starting_games['duration'] # extracting avg duration
 
     starting_games['num_back'] = starting_games.apply(lambda a: (a[cols] == '<').sum()/ (n-1), axis = 1) 
-    print(starting_games['num_back'].describe())
-    print(starting_games['num_back'].unique())
+    #print(starting_games['num_back'].describe())
+    #print(starting_games['num_back'].unique())
 
     # removing < sign
     starting_games['2_click'] = starting_games.apply(lambda row: row['2_click'] if (row['2_click'] != '<') else row['source'], axis = 1)
@@ -68,7 +68,7 @@ def build_dataset(starting_games, n, ind = None, node_stats_df = None, embedding
     for i in cols:
         temp.append(f"pagerank_{i}")
     starting_games['max_pagerank'] = starting_games.apply(lambda row: row[temp].max(), axis = 1)
-    print(temp)
+    #print(temp)
 
     if embeddings_df is None:
         embeddings_df = load_embeddings()
@@ -157,7 +157,7 @@ def create_from_dataset(datagames, whole_dataset, minn, maxx, filter = True, bal
         data_one['finished'] = data_one['finished'].astype('int')
     if all_clicks == False:
         for n in range (2, maxx+1):
-            print(f"Adding for click {n}...")
+            #print(f"Adding for click {n}...")
             #print(f"Prediction based on first {n} clicks: ")
             n_games = datagames.copy()
             if filter == True:
@@ -171,12 +171,12 @@ def create_from_dataset(datagames, whole_dataset, minn, maxx, filter = True, bal
             features.append("n")
             final.append(dataset)
             
-            print("----------------------------------------------------")
-            print()
+            #print("----------------------------------------------------")
+            #print()
     else:
         
         for n in range (2, 100000):
-            print(f"Adding for click {n}...")
+            #print(f"Adding for click {n}...")
             #print(f"Prediction based on first {n} clicks: ")
             n_games = datagames.copy()
             if filter == True:
@@ -198,8 +198,8 @@ def create_from_dataset(datagames, whole_dataset, minn, maxx, filter = True, bal
             features.append("n")
             final.append(dataset)
             
-            print("----------------------------------------------------")
-            print()
+            #print("----------------------------------------------------")
+            #print()
     if balanced:
         if minn == 1:
             if all_clicks == False:
@@ -219,7 +219,7 @@ def create_from_dataset(datagames, whole_dataset, minn, maxx, filter = True, bal
                 if all_clicks == True:
                     filtered_rows = i.loc[~i.index.isin(removed_indices)]
                     whole_dataset = pd.concat([whole_dataset, filtered_rows], ignore_index=True)
-                    print(f"for i {i} whole dataset is now {whole_dataset.shape[0]}")
+                    #print(f"for i {i} whole dataset is now {whole_dataset.shape[0]}")
                 else:
                     whole_dataset = pd.concat([whole_dataset, i.loc[list(valid_indices)]], ignore_index=True)
             whole_dataset['n'] = whole_dataset['n'].astype('float64')
@@ -282,7 +282,7 @@ def create_dataset_and_samples(n_min, start_dataset, num_samples, max_path_lengt
         ret_true = sampled_true_games['path_length']
         ret_true = ret_true.loc[~ret_true.index.isin(sampled_true_games_m[1])]
         ret_false = sampled_false_games['path_length']
-        print(f"Removed indices are {ret_false.loc[sampled_false_games_m[1]]}")
+        #print(f"Removed indices are {ret_false.loc[sampled_false_games_m[1]]}")
         ret_false = ret_false.loc[~ret_false.index.isin(sampled_false_games_m[1])]
         #ret_false = sampled_false_games['path_length'].loc[sampled_false_games_m[1]]
         sampled_true_games_m = sampled_true_games_m[0]
@@ -363,13 +363,13 @@ def joint_predict_and_print(true_games, false_games, num_samples, n_min, thresho
     print(f"Accuracy at click 1: {accuracies_true_one:.4f}")
     for idx, acc in enumerate(accuracies_true):
         print(f"Accuracy at index {idx + 2}: {acc:.4f}")
-    print(f"Overall F1 score: {f1_true:.4f}")
+    #print(f"Overall F1 score: {f1_true:.4f}")
     
     print("\nAccuracies and F1 Scores for clicks in unfinished games:")
     print(f"Accuracy at click 1: {accuracies_false_one:.4f}")
     for idx, acc in enumerate(accuracies_false):
         print(f"Accuracy at index {idx + 2}: {acc:.4f}")
-    print(f"Overall F1 score: {f1_false:.4f}")
+    #print(f"Overall F1 score: {f1_false:.4f}")
 
     return np.concatenate((temp_true, y_pred_true)), np.concatenate((temp_false, y_pred_false))
 
@@ -552,9 +552,9 @@ def plot_mean_of_games(final_true_pred, final_false_pred):
     plt.plot(mean_true_pred, label="True Array (Mean)", linestyle='-', marker='o', color='green')
     plt.plot(mean_false_pred, label="False Array (Mean)", linestyle='--', marker='x', color='red')
     
-    plt.xlabel("Columns")
-    plt.ylabel("Average Values")
-    plt.title("Mean of Predictions for True and False Arrays")
+    plt.xlabel("Clicks")
+    plt.ylabel("Average Probability of Winning")
+    plt.title("Mean of Predictions for Win and Lose Arrays")
     plt.legend(loc='upper right', bbox_to_anchor=(1.3, 1))  # Adjust legend position
     plt.grid(True)
     
@@ -614,9 +614,9 @@ def plot_average_for_labels(array, labels, is_true=True, changeable = False, max
                 plt.plot(avg_array, marker='o', label=f"Average for {label_names[label]}", color=color)
                 
                 plt.title(f"Average of All Games for Label {label} ({label_names[label]})")
-                plt.xlabel("Columns")
-                plt.ylabel("Values")
-                plt.legend(loc='upper right')
+                plt.xlabel("Clicks")
+                plt.ylabel("Probability of winning")
+                
                 plt.grid(True)
                 plt.tight_layout()
                 plt.show()
@@ -655,7 +655,7 @@ def plot_average_for_labels(array, labels, is_true=True, changeable = False, max
             plt.title(f"Average of All Games for Label {label} ({label_names[label]})")
             plt.xlabel("Columns")
             plt.ylabel("Values")
-            plt.legend(loc='upper right')
+            
             plt.grid(True)
             plt.tight_layout()
             plt.show()
