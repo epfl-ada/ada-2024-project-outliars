@@ -61,6 +61,37 @@ def load_categories_df(path: str = DEF_CATEGORIES_PATH):
     return categories_df
 
 
+def find_impossible_games(games_src, articles_df, dead_end, isolated_target, distance_df):
+    counter = 0
+    typo_src, typo_trg = [], []
+    isol_src, isol_trg = [], []
+    print("Impossible games because of no existing path:")
+    for i, row in games_src.iterrows():
+        if not i in articles_df['article_name'].values:
+            typo_src.append(i)
+            continue
+        if not row['target'] in articles_df['article_name'].values:
+            typo_trg.append(row['target'])
+            continue
+        if np.isin(i, dead_end):
+            isol_src.append(i)
+        if np.isin(row['target'], isolated_target):
+            isol_trg.append(row['target'])
+        if pd.isna(distance_df.loc[i, row['target']]):
+            print(i, "-", row['target'])
+            counter += 1
+    return counter, list(set(typo_src)), list(set(typo_trg)), list(set(isol_src)), list(set(isol_trg))
+
+def get_manually_added_links():
+    return [
+        ('Finland', 'Åland'), 
+        ('Republic_of_Ireland', 'Éire'), 
+        ('Claude_Monet', 'Édouard_Manet'), 
+        ('Impressionism', 'Édouard_Manet'), 
+        ('Ireland', 'Éire'), 
+        ('Francisco_Goya', 'Édouard_Manet')
+    ]
+
 def load_links_df(path: str = DEF_LINKS_PATH, articles_df = None):
     links_df = pd.read_csv(path, sep = "\t", comment = '#', header = None)
     links_df.columns = ['source', 'target']
@@ -71,15 +102,9 @@ def load_links_df(path: str = DEF_LINKS_PATH, articles_df = None):
     # Print how many were loaded from the file
     print(f"Loaded {len(links_df)} links in df of shape {links_df.shape}")
 
+    
     # Create a dataframe with the links that are not in the articles dataframe
-    missing_links = [
-        ('Finland', 'Åland'), 
-        ('Republic_of_Ireland', 'Éire'), 
-        ('Claude_Monet', 'Édouard_Manet'), 
-        ('Impressionism', 'Édouard_Manet'), 
-        ('Ireland', 'Éire'), 
-        ('Francisco_Goya', 'Édouard_Manet')
-    ]
+    missing_links = get_manually_added_links()
 
     missing_links_df = pd.DataFrame(missing_links, columns = ['source', 'target'])
     
@@ -95,6 +120,7 @@ def load_links_df(path: str = DEF_LINKS_PATH, articles_df = None):
         links_df = pd.concat([links_df, license_links_df], ignore_index = True)
 
     print(f"After adding missing links, there are {len(links_df)} links in df")
+    
     return links_df
 
 
@@ -286,12 +312,12 @@ def prune_timeout_games(all_games_df):
     return all_games_df
 
 
-def load_preprocessed_games(remove_timeout = True, remove = False):
+def load_preprocessed_games(path1 = "../data/paths-and-graph/paths_finished.tsv", path2 = "../data/paths-and-graph/paths_unfinished.tsv", path3= DEF_ARTICLES_PATH, remove_timeout = True, remove = False):
     # Loads all games, removes the one before 2011, remove the ones with invalid article names, potentially remove timeouted
-    finished_df = load_finished_df()
-    unfinished_df = load_unfinished_df()
+    finished_df = load_finished_df(path1)
+    unfinished_df = load_unfinished_df(path2)
     gamess, _ = preprocess_and_concat_unfinished_and_finished(unfinished_df, finished_df)
-    articles_df = load_article_df()
+    articles_df = load_article_df(path3)
     new_games = prune_invalid_games(gamess, articles_df)
     new_games = remove_unexisting_link(new_games, remove)
     if remove_timeout:
