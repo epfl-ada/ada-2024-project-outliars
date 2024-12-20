@@ -1,0 +1,73 @@
+model_name,source,target,path,won
+gpt-4o-mini,Gas,Pope_Benedict_XVI,Gas -> Natural_gas -> Italy -> Pope -> Pope_Benedict_XVI,True
+gpt-4o-mini,President_of_the_United_States,Sea,President_of_the_United_States -> Great_Britain -> English_Channel -> France -> Mediterranean_Sea -> Sea,True
+gpt-4o-mini,List_of_vegetable_oils,Hot_air_balloon,List_of_vegetable_oils -> Biodiesel -> Biofuel -> Ethanol -> Alcohol -> Chemistry -> Gas -> Heat -> Energy -> Electricity -> Electric_charge -> Electric_field -> Physics -> Acceleration -> Light -> Photon -> Electromagnetic_radiation -> Light -> Heat -> Energy -> Heat,False
+gpt-4o-mini,Buddha,Earthquake,Buddha -> India -> Plate_tectonics -> Earthquake,True
+gpt-4o-mini,AIDS,Tour_de_France,AIDS -> France -> Paris -> Tour_de_France,True
+gpt-4o-mini,Slavery,Ocean,Slavery -> Africa -> Atlantic_Ocean -> Ocean,True
+gpt-4o-mini,Bobcat,Timur,Bobcat -> Mammal -> Animal -> Chordate -> Eukaryote -> Organism -> Human -> Anthropology -> Archaeology -> History -> Anthropology -> Archaeology -> History -> Anthropology -> Civilization -> Afghanistan -> Timur,True
+gpt-4o-mini,Bonobo,Color_blindness,Bonobo -> Chimpanzee -> Biology -> Genetics -> DNA -> Genetic_code -> Natural_selection -> Evolution -> Genetics -> Human -> Pigment -> Color -> Color_blindness,True
+gpt-4o-mini,Eruption_column,Where_Did_Our_Love_Go,Eruption_column -> Magma -> Earth,False
+gpt-4o-mini,Kenya,Weapon,Kenya -> Africa -> Military_dictatorship -> Autocracy -> Government -> Law -> International_law -> War -> Weapon,True
+gpt-4o-mini,Tooth_enamel,"Georgetown,_Guyana","Tooth_enamel -> Crystal -> Chemistry -> Geology -> Plate_tectonics -> South_America -> Georgetown,_Guyana",True
+gpt-4o-mini,Thomas_Hobbes,Trichinosis,Thomas_Hobbes -> Philosophy -> Biology -> Animal -> Organism -> Eukaryote -> Cell_(biology) -> Animal -> Chordate -> Mammal -> Milk -> Cattle -> Animal -> Human -> Agriculture -> Fertilizer -> Plant -> Agriculture -> Fertilizer -> Plant -> Agriculture -> Fertilizer,False
+gpt-4o-mini,Gerald_Ford,IG_Farben_Building,Gerald_Ford -> Cold_War -> Berlin_Wall -> German_reunification -> Germany -> Frankfurt -> IG_Farben_Building,True
+gpt-4o-mini,Congo_River,Alzheimer's_disease,Congo_River -> Democratic_Republic_of_the_Congo -> Sub-Saharan_Africa -> Africa -> Algeria -> Algiers -> Cairo -> Egypt -> Middle_East,False
+gpt-4o-mini,Asteroid,Viking,Asteroid -> Mars -> Mars_Exploration_Rover -> Geology -> History_of_Earth -> Civilization,False
+gpt-4o-mini,Pyramid,Bean,Pyramid -> Egypt -> Agriculture -> Pea -> Bean,True
+gpt-4o-mini,Gazelle,Death_Valley_National_Park,Gazelle -> Animal,False
+gpt-4o-mini,Sassanid_Empire,Vole,"Sassanid_Empire -> Iran -> Agriculture -> Fertile_Crescent -> Mesopotamia -> Irrigation -> Canal -> Erie_Canal -> Great_Lakes -> Minnesota -> Minneapolis,_Minnesota -> United_States -> Agriculture -> Arable_land -> Euphrates -> Iraq -> Baghdad",False
+gpt-4o,Gas,Pope_Benedict_XVI,Gas -> Dutch_language -> Latin_alphabet -> Italy -> Vatican_City -> Pope_Benedict_XVI,True
+gpt-4o,President_of_the_United_States,Sea,President_of_the_United_States -> United_States -> Atlantic_Ocean -> Sea,True
+gpt-4o,List_of_vegetable_oils,Hot_air_balloon,List_of_vegetable_oils -> Fire -> Heat,False
+gpt-4o,Buddha,Earthquake,Buddha -> India -> Plate_tectonics -> Earthquake,True
+gpt-4o,AIDS,Tour_de_France,AIDS -> France -> Paris -> Tour_de_France,True
+gpt-4o,Slavery,Ocean,Slavery -> Indian_Ocean -> Ocean,True
+gpt-4o,Bobcat,Timur,Bobcat -> Mammal -> Human -> Asia -> Iran -> Afghanistan -> Timur,True
+gpt-4o,Bonobo,Color_blindness,Bonobo -> Human -> Genetics -> DNA -> Cell_(biology) -> Eukaryote -> Animal -> Human -> Pigment -> Color -> Color_blindness,True
+gpt-4o,Eruption_column,Where_Did_Our_Love_Go,"Eruption_column -> Volcano -> United_States -> American_popular_music -> Marvin_Gaye -> Rhythm_and_blues -> Marvin_Gaye -> Rhythm_and_blues -> Marvin_Gaye -> Detroit,_Michigan -> The_Temptations -> The_Supremes -> Where_Did_Our_Love_Go",True
+gpt-4o,Kenya,Weapon,Kenya -> United_States -> Nuclear_weapon -> Weapon,True
+gpt-4o,Tooth_enamel,"Georgetown,_Guyana","Tooth_enamel -> Coffee -> Liberia -> United_States -> Guyana -> Georgetown,_Guyana",True
+gpt-4o,Thomas_Hobbes,Trichinosis,Thomas_Hobbes -> Tiger -> Animal -> Bacteria,False
+gpt-4o,Gerald_Ford,IG_Farben_Building,Gerald_Ford -> World_War_II -> Germany -> Frankfurt -> IG_Farben_Building,True
+gpt-4o,Congo_River,Alzheimer's_disease,Congo_River -> Democratic_Republic_of_the_Congo -> Human -> Brain -> Alzheimer's_disease,True
+gpt-4o,Asteroid,Viking,Asteroid -> Mars -> Mars_Exploration_Rover -> Cornell_University -> Carl_Sagan -> Solar_System -> Roman_mythology -> Ancient_Rome,False
+gpt-4o,Pyramid,Bean,Pyramid -> Mexico -> Agriculture -> Soybean -> Plant -> Seed -> Bean,True
+gpt-4o,Gazelle,Death_Valley_National_Park,Gazelle -> Mammal -> North_America -> United_States -> California -> Redwood_National_and_State_Parks -> California -> Sequoia -> California,False
+gpt-4o,Sassanid_Empire,Vole,Sassanid_Empire -> India -> Mammal -> Animal -> Mammal,False
+gpt-3.5-turbo,Gas,Pope_Benedict_XVI,Gas -> Natural_gas -> Italy -> Rome -> Roman_Catholic_Church -> Pope_Benedict_XVI,True
+gpt-3.5-turbo,President_of_the_United_States,Sea,President_of_the_United_States -> George_Washington -> United_States,False
+gpt-3.5-turbo,List_of_vegetable_oils,Hot_air_balloon,List_of_vegetable_oils -> Olive_oil -> Tunisia -> Cyprus -> Trojan_War -> Odysseus -> Homer -> Virgil -> Apollo -> Zeus -> Odyssey -> Athena -> Attalus_I -> Ancient_Rome -> 19th_century -> 18th_century -> 10th_century -> Solar_System -> Pluto -> Moon -> Solar_eclipse -> Transit_of_Venus -> China -> Abacus -> Arithmetic -> Prime_number -> Ancient_Greece,False
+gpt-3.5-turbo,Buddha,Earthquake,Buddha -> India -> Himalayas -> Plate_tectonics -> Earthquake,True
+gpt-3.5-turbo,AIDS,Tour_de_France,AIDS -> France,False
+gpt-3.5-turbo,Slavery,Ocean,Slavery -> Indian_Ocean -> Atlantic_Ocean -> Pacific_Ocean -> Ocean,True
+gpt-3.5-turbo,Bobcat,Timur,Bobcat -> Mammal -> Triassic -> Dinosaur -> Archaeopteryx -> Magpie -> Eurasian_Jay -> Jackdaw -> Raven -> Scientific_classification -> Aristotle -> Plato -> Byzantine_Empire,False
+gpt-3.5-turbo,Bonobo,Color_blindness,Bonobo -> Human -> Aesthetics,False
+gpt-3.5-turbo,Eruption_column,Where_Did_Our_Love_Go,Eruption_column -> Weather -> Sun -> Solar_System -> Plate_tectonics -> Nicolaus_Copernicus -> Johannes_Kepler -> Isaac_Newton -> Astronomy -> Galileo_Galilei -> Acceleration -> Special_relativity -> Albert_Einstein -> Quantum_mechanics -> Niels_Bohr -> Max_Planck -> 20th_century -> 12th_century -> 10th_century -> 11th_century,False
+gpt-3.5-turbo,Kenya,Weapon,Kenya -> World_War_I -> Tank -> T-34 -> Cold_War -> Nuclear_weapon -> Weapon,True
+gpt-3.5-turbo,Tooth_enamel,"Georgetown,_Guyana",Tooth_enamel -> Tooth_development -> Vitamin,False
+gpt-3.5-turbo,Thomas_Hobbes,Trichinosis,Thomas_Hobbes -> Plato -> Aristotle -> Tide -> Sun -> Solar_eclipse -> Transit_of_Venus -> Johannes_Kepler -> Isaac_Newton -> Smallpox -> Edward_Jenner -> William_Harvey -> René_Descartes -> French_Revolution -> Napoleon_I_of_France -> Battle_of_Austerlitz -> La_Grande_Armée -> Vienna -> Wolfgang_Amadeus_Mozart -> Trichinosis,True
+gpt-3.5-turbo,Gerald_Ford,IG_Farben_Building,Gerald_Ford -> Vietnam_War -> Berlin_Wall -> United_States,False
+gpt-3.5-turbo,Congo_River,Alzheimer's_disease,Congo_River,False
+gpt-3.5-turbo,Asteroid,Viking,Asteroid -> Jupiter -> Venus -> Cassini-Huygens -> Enceladus_(moon) -> Moon -> Apollo_11 -> Saturn_V -> Wernher_von_Braun -> Mars -> Ancient_Rome -> Julius_Caesar -> Alexander_the_Great -> Ancient_Greece,False
+gpt-3.5-turbo,Pyramid,Bean,Pyramid -> Egypt -> Society -> Agriculture -> Tea -> Coffee -> Ethiopia -> Vegetable -> Pea -> Bean,True
+gpt-3.5-turbo,Gazelle,Death_Valley_National_Park,Gazelle -> Antelope -> Cheetah -> United_States,False
+gpt-3.5-turbo,Sassanid_Empire,Vole,Sassanid_Empire -> Plato -> Renaissance -> Leonardo_da_Vinci -> Anatomy -> Vertebrate -> Mammal,False
+o1-mini,Gas,Pope_Benedict_XVI,Gas -> Natural_gas -> Italy -> Pope -> Pope_Benedict_XVI,True
+o1-mini,President_of_the_United_States,Sea,President_of_the_United_States -> Great_Britain -> English_Channel -> North_Sea -> Atlantic_Ocean -> Sea,True
+o1-mini,List_of_vegetable_oils,Hot_air_balloon,List_of_vegetable_oils -> Fire -> Heat -> Energy -> Wind -> Earth's_atmosphere -> Hydrogen -> Gas,False
+o1-mini,Buddha,Earthquake,Buddha -> China -> Geography -> Earthquake,True
+o1-mini,AIDS,Tour_de_France,AIDS -> France -> Paris -> Tour_de_France,True
+o1-mini,Slavery,Ocean,Slavery -> Atlantic_slave_trade -> Continent -> Atlantic_Ocean -> Ocean,True
+o1-mini,Bobcat,Timur,Bobcat -> Mammal -> Human -> Asia -> Uzbekistan -> Timur,True
+o1-mini,Bonobo,Color_blindness,Bonobo -> Human -> Pigment -> Color -> Color_blindness,True
+o1-mini,Eruption_column,Where_Did_Our_Love_Go,"Eruption_column -> Rain -> United_States -> Music_of_the_United_States -> Marvin_Gaye -> Rhythm_and_blues -> The_Rolling_Stones -> The_Beatles -> Popular_culture -> Music -> Culture -> Music -> Folk_music -> Bob_Dylan -> Elvis_Presley -> The_Beatles -> The_Beatles_discography -> United_States -> Music_of_the_United_States -> Detroit,_Michigan -> Marvin_Gaye -> Rhythm_and_blues -> American_popular_music -> Rhythm_and_blues -> American_popular_music",False
+o1-mini,Kenya,Weapon,Kenya -> World_War_I -> Tank -> Weapon,True
+o1-mini,Tooth_enamel,"Georgetown,_Guyana","Tooth_enamel -> Coffee -> Brazil -> Guyana -> Georgetown,_Guyana",True
+o1-mini,Thomas_Hobbes,Trichinosis,Thomas_Hobbes -> Philosophy -> Biology -> Medicine -> Health -> Food -> Bacteria -> Lyme_disease -> DNA -> Genetics -> Human -> Organism -> Bacteria -> Cholera -> Water -> Fish -> Fishing -> Cod -> Black_Death -> Tuberculosis -> World_Health_Organization -> Malaria -> Protein -> Bacteria -> Lyme_disease -> Bacteria -> Biotechnology,False
+o1-mini,Gerald_Ford,IG_Farben_Building,Gerald_Ford -> President_of_the_United_States -> Cold_War -> Nazi_Germany -> Wernher_von_Braun -> Germany -> Cologne -> Rhine -> Germany -> Frankfurt -> IG_Farben_Building,True
+o1-mini,Congo_River,Alzheimer's_disease,Congo_River -> Europe -> Culture -> Human -> Brain -> Alzheimer's_disease,True
+o1-mini,Asteroid,Viking,Asteroid -> Mars -> Mars_Exploration_Rover -> Geology -> History_of_Earth -> European_Union -> Europe -> Iceland -> Viking,True
+o1-mini,Pyramid,Bean,Pyramid -> Egypt -> Agriculture -> Soybean -> Seed -> Bean,True
+o1-mini,Gazelle,Death_Valley_National_Park,Gazelle -> Africa -> Desert -> United_States -> California -> Sequoia -> Redwood_National_and_State_Parks -> California -> Sequoia -> Tree -> California -> Lake_Tahoe -> Gold -> Geology -> Plate_tectonics -> United_States -> California -> Volcano -> Yellowstone_National_Park -> Rocky_Mountains -> Mining -> Geology -> Volcano -> California -> Mining -> California -> Colorado_River,False
+o1-mini,Sassanid_Empire,Vole,Sassanid_Empire -> Aristotle -> Biology -> Animal -> Mammal -> Scientific_classification -> Vertebrate -> Mammal -> Scientific_classification -> Binomial_nomenclature -> Carolus_Linnaeus -> Biology -> Animal -> Mammal -> Bat -> Scientific_classification -> Vertebrate -> Mammal -> Scientific_classification -> Evolution -> Vertebrate -> Mammal -> Scientific_classification -> Chordate -> Eukaryote -> Animal -> Mammal,False

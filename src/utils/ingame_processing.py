@@ -801,6 +801,19 @@ def build_dataset_for_players(train_dataset, filtered_dataset, player_ips, n_min
         player_one_sets.append(pgo)
     return new_dataset, one_dataset, player_games_sets, player_one_sets
 
+def build_dataset_for_models(train_dataset, filtered_dataset, player_ips, model_datasets, n_min = 4, node_stats_df = None, embeddings_df = None, pair_data = None, all_clicks = False):
+    train_dataset = train_dataset.copy()[~train_dataset['hashIP'].isin(player_ips)]
+    new_dataset, one_dataset = create_from_dataset(train_dataset, None, 1, 4, node_stats_df = node_stats_df, embeddings_df = embeddings_df, pair_data = pair_data)
+    player_games_sets, player_one_sets = [], []
+    for d in model_datasets:
+        pg, pgo = create_from_dataset(d, None, 1, n_min, node_stats_df = node_stats_df, embeddings_df = embeddings_df, pair_data = pair_data, all_clicks = all_clicks)
+        if all_clicks == True:
+            player_games_sets.append((pg, d[['path_length', 'finished']]))
+        else:
+            player_games_sets.append(pg)
+        player_one_sets.append(pgo)
+    return new_dataset, one_dataset, player_games_sets, player_one_sets
+
 
 def calc_clicks_and_labels(model_inh, model_1, model, player_games_sets, player_one_sets, all_clicks = False):
     clicks = []
@@ -871,7 +884,7 @@ def calc_clicks_and_labels(model_inh, model_1, model, player_games_sets, player_
     return clicks, labels, wins
     
 
-def plot_player_games(clicks, wins, elos=None):
+def plot_player_games(clicks, wins, elos=None, player= True):
     """
     Plots games for each player. When Elo ratings are provided, plots each game separately 
     with Elo ratings and game scores included in the plot titles.
@@ -893,15 +906,21 @@ def plot_player_games(clicks, wins, elos=None):
             plt.figure(figsize=(10, 6))
             for game_idx, game in enumerate(player_games):
                 if player_wins[game_idx] == 1:  # Won game
-                    plt.plot(game, marker='o', color='green', label='Win' if game_idx == 0 else "") 
+                    plt.plot(game, marker='o', color='green', label='Win') 
                 else:  # Lost game
-                    plt.plot(game, marker='o', color='red', label='Loss' if game_idx == 0 else "")
+                    plt.plot(game, marker='o', color='red', label='Loss' )
             
-            plt.title(f"Player {player_idx + 1}: Games")
+            if player == True:
+                plt.title(f"Player {player_idx + 1}: Games")
+            else:
+                plt.title(f"Model {player_idx + 1}: Games")
             plt.xlabel("Clicks")
-            plt.ylabel("Values")
+            plt.ylim(0, 1)
+            plt.ylabel("Probability of winning")
             plt.legend(loc='upper right')
             plt.grid(True)
+            max_clicks = max(len(game) for game in player_games)  # Get max length of any game
+            plt.xticks(ticks=range(0, max_clicks + 1, 1))
             plt.tight_layout()
             plt.show()
         else:
@@ -912,21 +931,34 @@ def plot_player_games(clicks, wins, elos=None):
                 plt.figure(figsize=(10, 6))
                 
                 color = 'green' if player_wins[game_idx] == 1 else 'red'
-                plt.plot(game, marker='o', color=color)
+                #plt.plot(game, marker='o', color=color)
+                if player_wins[game_idx] == 1:  # Won game
+                    plt.plot(game, marker='o', color='green', label='Win') 
+                else:  # Lost game
+                    plt.plot(game, marker='o', color='red', label='Loss' )
                 
                 elo_before = player_elos[game_idx]
                 elo_after = player_elos[game_idx + 1] if game_idx + 1 < len(player_elos) else "N/A"
                 game_score = game_scores[game_idx]
                 
-                plt.title(
+                if player == True:
+                    plt.title(
                     f"Player {player_idx + 1}: Game {game_idx + 1}\n"
                     f"Elo Before: {elo_before}, Elo After: {elo_after}\n"
                     f"Game Score: {game_score}"
-                )
-                
+                    )
+                else:
+                    plt.title(
+                    f"Model {player_idx + 1}: Game {game_idx + 1}\n"
+                    f"Elo Before: {elo_before}, Elo After: {elo_after}\n"
+                    f"Game Score: {game_score}"
+                    )
+                plt.ylim(0, 1)
                 plt.xlabel("Clicks")
-                plt.ylabel("Values")
+                plt.ylabel("Probability of winning")
                 plt.grid(True)
+                max_clicks = max(len(game) for game in player_games)  # Get max length of any game
+                plt.xticks(ticks=range(0, max_clicks + 1, 1))
                 plt.tight_layout()
                 plt.show()
 
