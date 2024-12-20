@@ -81,8 +81,8 @@ class LogisticRegression:
             x_train: pd.DataFrame,
             y_train: pd.Series,
             plot: bool = False, 
-            threshold_range: Tuple[float, float] = (0.4, 0.6), 
-            n_samples: int = 201
+            threshold_range: Tuple[float, float] = (0.42, 0.58), 
+            n_samples: int = 161
     ):
         thresholds = np.linspace(*threshold_range, n_samples)
         
@@ -160,8 +160,6 @@ class LogisticRegression:
             X_train = sm.add_constant(X_train)
             X_test = sm.add_constant(X_test)
 
-        
-            
         self.model = sm.Logit(y_train, X_train).fit()
         self.threshold = self.determine_best_thresh(X_train, y_train)
         

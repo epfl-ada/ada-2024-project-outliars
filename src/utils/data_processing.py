@@ -554,6 +554,23 @@ def run_cpp_code_to_compute_unique_source_target_pair_stats(graph_path: str = DE
         raise RuntimeError(f"Execution failed with error: {e}")
 
 
+def load_unique_source_target_pair_stats(path: str = DEF_PAIR_STATS_PATH):
+
+    unique_game_stats = pd.read_csv(path, sep = '\t', header = None)
+    print(f"Loaded {len(unique_game_stats)} unique source-target pair stats")
+        
+    unique_game_stats.columns = [
+        'source', 'target', 'shortest_path_length', 
+        'shortest_path_count', 'max_sp_pagerank', 'max_sp_avg_pagerank', 'avg_sp_avg_pagerank',
+        'one_longer_path_count', 'max_ol_pagerank', 'max_ol_avg_pagerank', 'avg_ol_avg_pagerank', 
+        'two_longer_pagerank', 'max_tl_pagerank','max_tl_avg_pagerank'
+    ]
+
+    unique_game_stats.set_index(['source', 'target'], inplace = True)
+        
+    return unique_game_stats
+
+
 def load_or_compute_unique_source_target_pair_stats(path: str = DEF_PAIR_STATS_PATH):
     unique_game_stats = None
     
@@ -587,6 +604,22 @@ def load_or_compute_unique_source_target_pair_stats(path: str = DEF_PAIR_STATS_P
     unique_game_stats.set_index(['source', 'target'], inplace = True)
         
     return unique_game_stats
+
+
+def load_node_stats(path: str = DEF_NODE_STATS_PATH):
+    node_stats = pd.read_csv(path, sep = '\t', header = None)
+    print(f"Loaded {len(node_stats)} node stats")
+        
+    node_stats.columns = ['article_name', 'degree', 'closeness', 'betweenness', 'pagerank']
+    node_stats.index = node_stats['article_name']
+    node_stats.drop(columns=['article_name'], inplace=True)
+    
+    # Make sure nothing is too close to zero
+    node_stats['closeness'] = np.maximum(node_stats['closeness'], 1e-8)
+    node_stats['betweenness'] = np.maximum(node_stats['betweenness'], 1e-8)
+    node_stats['pagerank'] = np.maximum(node_stats['pagerank'], 1e-8)
+        
+    return node_stats
 
 
 def load_or_compute_node_stats(path: str = DEF_NODE_STATS_PATH):
