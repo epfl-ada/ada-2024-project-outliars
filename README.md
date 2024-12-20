@@ -6,7 +6,7 @@ This repository contains the work conducted for our project *"Wikispeedia: The G
 
 Our goal has been to create a framework that infuses the game with robust metrics of difficulty, player skill assessment, dynamic feedback, and an Elo-like rating system, ultimately rendering Wikispeedia as strategic and community-driven as classical chess.
 
-## **Check out our full data story here:**  
+**Check out our full data story here:**  
 # [**Wikispeedia: The Grandmaster’s Path (Data Story)**](https://kvrancic.notion.site/wikispeedia-the-grandmasters-path?pvs=4)
 
 In the data story, we walk through:
