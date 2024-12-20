@@ -1,5 +1,7 @@
 # Wikispeedia: The Grandmaster’s Path
 
+[Click here to read the full datastory.](https://kvrancic.notion.site/wikispeedia-the-grandmasters-path?pvs=4)
+
 ## Overview
 
 This repository contains the work conducted for our project *"Wikispeedia: The Grandmaster’s Path"* - a journey to bring a "chessified" competitive and analytical ecosystem to the Wikispeedia game.
