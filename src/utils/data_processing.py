@@ -205,8 +205,10 @@ def remove_games_with_not_existing_link(games_df, links_df):
             print(f"Removed {len1 - len(invalid_pairs)} games that contained non existing links, such as: {invalid_pairs}")
     return games_df
 
-def remove_unexisting_link(games_df):
+def remove_unexisting_link(games_df, remove = False):
     # after analysis, we saw that all games have a link to 'Wikipedia_Text_of_the_GNU_Free_Documentation_License' but this leads to nowhere so we should remove such games, as well as games containing non existing links
+    if remove == True:
+        return games_df
     len1 = games_df.shape[0]
     
     def check_consecutive_links(path):
@@ -214,6 +216,7 @@ def remove_unexisting_link(games_df):
             source, target = path[i], path[i + 1]
             if (source == '<') or (target == '<'):
                 continue
+
             if (source, target) in [('Finland', 'Åland'), ('Republic_of_Ireland', 'Éire'), ('Claude_Monet', 'Édouard_Manet'), ('Impressionism', 'Édouard_Manet'), ('Ireland', 'Éire'), ('Francisco_Goya', 'Édouard_Manet')]:
                 
                 return False 
@@ -283,14 +286,14 @@ def prune_timeout_games(all_games_df):
     return all_games_df
 
 
-def load_preprocessed_games(remove_timeout = True):
+def load_preprocessed_games(remove_timeout = True, remove = False):
     # Loads all games, removes the one before 2011, remove the ones with invalid article names, potentially remove timeouted
     finished_df = load_finished_df()
     unfinished_df = load_unfinished_df()
     gamess, _ = preprocess_and_concat_unfinished_and_finished(unfinished_df, finished_df)
     articles_df = load_article_df()
     new_games = prune_invalid_games(gamess, articles_df)
-    new_games = remove_unexisting_link(new_games)
+    new_games = remove_unexisting_link(new_games, remove)
     if remove_timeout:
         neww_games = prune_timeout_games(new_games)
     return neww_games
